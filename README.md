@@ -24,7 +24,7 @@ Methods compared: vanilla 3DGS on blurry input, pre-deblur (oracle kernel) then 
 pre-deblur (blind) then 3DGS, ours (free-form kernel), ours (parametric kernel), clean reference.
 Metrics: PSNR, SSIM, LPIPS on sharp held-out views.
 
-See [docs/plan.md](docs/plan.md) for scope and schedule, and [docs/log.md](docs/log.md) for the experiment log.
+See [docs/STATUS.md](docs/STATUS.md) for current status and how to resume, [docs/plan.md](docs/plan.md) for scope and schedule, and [docs/log.md](docs/log.md) for the experiment log.
 
 ## Layout
 ```
