@@ -13,10 +13,15 @@ def _delta_logits(k: int, sharp: float = 6.0) -> torch.Tensor:
 class FreeFormKernels(nn.Module):
     """One KxK kernel per view; softmax enforces non-negativity and sum-to-one."""
 
-    def __init__(self, n_views: int, ksize: int = 25, init_sharp: float = 6.0):
+    def __init__(self, n_views: int, ksize: int = 25, init_sharp: float = 6.0, init_sigma: float | None = None):
         super().__init__()
         self.ksize = ksize
-        self.logits = nn.Parameter(_delta_logits(ksize, init_sharp).expand(n_views, ksize, ksize).clone())
+        if init_sigma is not None:  # start from a mild Gaussian blur: unsaturated softmax -> useful gradients
+            r = torch.arange(ksize, dtype=torch.float32) - ksize // 2
+            z = -(r[:, None] ** 2 + r[None] ** 2) / (2 * init_sigma**2)
+        else:
+            z = _delta_logits(ksize, init_sharp)
+        self.logits = nn.Parameter(z.expand(n_views, ksize, ksize).clone())
 
     def forward(self, idx: int) -> torch.Tensor:
         return torch.softmax(self.logits[idx].flatten(), 0).view(self.ksize, self.ksize)
@@ -51,3 +56,14 @@ class PolylineKernels(nn.Module):
         for dx, dy, w in ((0, 0, (1 - fx) * (1 - fy)), (1, 0, fx * (1 - fy)), (0, 1, (1 - fx) * fy), (1, 1, fx * fy)):
             kern = kern.index_add(0, (y0 + dy) * k + (x0 + dx), w)
         return (kern / kern.sum()).view(k, k)
+
+
+class FixedKernels(nn.Module):
+    """Known (oracle) per-view kernels, not trained. Gives the non-blind upper bound for the joint method."""
+
+    def __init__(self, kernels):
+        super().__init__()
+        self.register_buffer("k", torch.as_tensor(kernels, dtype=torch.float32))
+
+    def forward(self, idx: int) -> torch.Tensor:
+        return self.k[idx]

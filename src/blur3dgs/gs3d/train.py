@@ -17,7 +17,7 @@ from scipy.spatial import cKDTree
 
 from ..analysis.kernel_recovery import best_shift_l2
 from ..analysis.metrics import all_metrics
-from ..kernel_est.module import FreeFormKernels, PolylineKernels
+from ..kernel_est.module import FixedKernels, FreeFormKernels, PolylineKernels
 from ..kernel_est.regularizers import kernel_reg
 from ..ops import apply_kernel, ssim_loss
 from .dataset import Scene
@@ -51,7 +51,7 @@ def render(params, viewmat, K, hw, sh_degree, device):
 
 def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 10000, kernel: str = "none",
           ksize: int = 25, kernel_start: int = 500, lr_kernel: float = 1e-2, reg: dict | None = None,
-          shared_kernel: bool = False, gt_kernels: np.ndarray | None = None, sh_degree: int = 3, seed: int = 0,
+          shared_kernel: bool = False, kernel_init_sigma: float = 1.0, poly_init_len: float = 1.0, gt_kernels: np.ndarray | None = None, sh_degree: int = 3, seed: int = 0,
           device: str = "cuda", eval_every: int = 0):
     """train_images: (n_train,H,W,3) uint8 images the model is fit to (blurry, deblurred, or sharp).
     kernel: 'none' (vanilla) | 'free' | 'polyline'. Returns metrics dict (sharp held-out views)."""
@@ -73,8 +73,14 @@ def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 100
     kmod, kopt = None, None
     if kernel != "none":
         n_k = 1 if shared_kernel else n_tr
-        kmod = (FreeFormKernels(n_k, ksize, init_sharp=10.0) if kernel == "free" else PolylineKernels(n_k, ksize)).to(device)
-        kopt = torch.optim.Adam(kmod.parameters(), lr=lr_kernel)
+        if kernel == "oracle":
+            kmod = FixedKernels(gt_kernels).to(device)
+        elif kernel == "free":
+            kmod = FreeFormKernels(n_k, ksize, init_sigma=kernel_init_sigma).to(device)
+        else:
+            kmod = PolylineKernels(n_k, ksize, init_len=poly_init_len).to(device)
+        if kernel != "oracle":
+            kopt = torch.optim.Adam(kmod.parameters(), lr=lr_kernel)
 
     vm = torch.from_numpy(scene.viewmats).to(device)
     Ks = torch.from_numpy(scene.Ks).to(device)
