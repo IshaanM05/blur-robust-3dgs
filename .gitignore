@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# data and outputs
+data/*
+!data/.gitkeep
+!data/README.md
+results/*
+!results/.gitkeep
+*.ply
+*.pt
+*.pth
+*.ckpt
+*.zip
+wandb/
+runs/

@@ -1,0 +1,12 @@
+numpy
+scipy
+scikit-image
+matplotlib
+pyyaml
+tqdm
+lpips
+imageio
+opencv-python
+torch>=2.6
+gsplat
+pytest
