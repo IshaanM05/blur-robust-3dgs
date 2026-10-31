@@ -38,3 +38,9 @@ One entry per experiment: date, config, what changed, result, takeaway.
   and gets within 0.5 dB of the oracle-kernel upper bound, +3.5 dB over vanilla, without knowing the kernels.
 - **Caveats:** one scene, one seed, one severity. Wiener with the *true* kernel (31.0) is still above our blind polyline (29.9); the
   fair blind baselines (guessed kernel) are still running. Free-form tuning was limited (3 settings).
+
+## 2026-10-31 (evening): matrix runs via `scripts/run_matrix.py` (see docs/results.md for all tables)
+- **bonsai/motion_medium blind baselines:** Wiener guess 26.82, RL guess 26.84 (vs ours polyline 29.93, vanilla 26.42): ours is +3.1 dB over the best blind classical baseline.
+- **counter/motion_medium:** Wiener oracle 28.19, ours oracle 27.96, **ours polyline 27.72**, RL guess 25.56, Wiener guess 25.46, vanilla 25.40 (kernel L2 0.145). Same ordering as bonsai.
+- **garden/motion_medium (partial):** vanilla 23.18, Wiener oracle 25.76; remaining runs pending.
+- **Caveat:** single seed. Garden runs grow to ~3M Gaussians and take 13-16 min each.
