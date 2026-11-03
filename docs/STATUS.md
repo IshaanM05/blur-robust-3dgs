@@ -2,9 +2,11 @@
 
 Last updated: 2026-11-03 night. **Deadline: Nov 6.** Plan: [plan.md](plan.md). Full tables: [results.md](results.md). Figures: [figures/](figures/). Talk outline: [slides_outline.md](slides_outline.md).
 
-## Where we are
-Pipeline, baselines and the proposed method are done. Experiments are running unattended (see below).
-Motion blur results (PSNR, held-out sharp views, 10k iterations, one seed):
+## Where we are (paused 2026-11-04, ~00:15 IST)
+Pipeline, baselines, the proposed method, the main matrix, ablations and seeds are **done and pushed**. 58 runs finished; see
+[results.md](results.md) for every table. Deadline **Nov 6**.
+
+Motion blur, PSNR on held-out sharp views (10k iterations):
 
 | Setting | vanilla | best blind classical | ours (polyline, blind) | ours (oracle kernels) |
 |---|---|---|---|---|
@@ -14,32 +16,39 @@ Motion blur results (PSNR, held-out sharp views, 10k iterations, one seed):
 | counter, medium | 25.40 | 25.56 | 27.72 | 27.96 |
 | garden, medium | 23.18 | 22.86 | 25.17 | 25.27 |
 
-Findings: the forward model is correct (oracle kernels); free-form per-view kernels collapse to a delta; the polyline kernel prior recovers
-the kernels (L2 ~0.15 vs 0.99 for a delta) and stays within ~0.1-0.5 dB of the oracle. The gain over vanilla grows with severity
-(+2.0 dB low, +3.5 medium, +4.5 high). Defocus blur (a disk) is weaker for the polyline prior (27.54 vs vanilla 26.70, oracle 28.62);
-the anisotropic-Gaussian kernel (`ours_gauss`) is queued to address it.
+Other findings (bonsai, medium motion blur unless stated):
+- **Seeds (3 training seeds):** ours 30.02 +- 0.08, vanilla 26.29 +- 0.18, Wiener-guess 26.76 +- 0.06.
+- **Ablations:** 3 / 6 / 12 control points 29.77 / 29.93 / 30.11; kernel size 15 / 25 / 35 29.95 / 29.93 / 30.08 (insensitive);
+  **one shared kernel 26.72** (per-view kernels are essential); training views 255 / 100 / 50 / 25: ours 29.93 / 29.52 / 27.46 / 23.64
+  vs vanilla 26.42 / - / 25.09 / 22.32 (gain shrinks as views drop).
+- **Free-form kernel + regularizers (sparsity, TV, both):** 26.49 / 25.94 / 26.46 dB, kernel L2 0.6-0.9; stays at vanilla level. A prior
+  on the loss does not rescue it; the kernel parametrisation does.
+- **Defocus / Gaussian blur (medium):** our methods are NOT clearly best. Defocus: oracle 28.62, Wiener-guess 28.01, polyline 27.54,
+  gauss 27.25, vanilla 26.70. Gaussian blur: Wiener-guess 28.25, polyline 27.29, gauss 27.21, oracle 27.12, vanilla 26.24.
+  **Caveat:** the default guessed kernel is a Gaussian with sigma 2, which equals the true kernel of the Gaussian-blur set (and is a close
+  match to the defocus disk), so that baseline is an accidental oracle there. The wrong-guess and noisy-input runs below are meant to test this.
 
-## What is running
+## Resume here
+Everything below is resumable (finished runs are skipped). Start the first one, then the second; they run back to back.
 ```bash
-scripts/run_all.sh        # main matrix, severity sweep, blur types, ablations, seeds   (~midnight)
-scripts/run_extras.sh     # waits for run_all.sh; regularizer ablation, counter severities, extra baselines (~3 AM)
-scripts/sync_results.sh   # every 45 min: regenerate docs/results.md and push if changed
+cd /home/ishaan/Desktop/blur-robust-3dgs && . .venv/bin/activate
+nohup scripts/run_extras.sh > results/run_extras.log 2>&1 &     # counter low/high, wiener_oracle + rl_guess on sweeps, garden rl_guess (~2.5 h)
+nohup scripts/run_extras2.sh > results/run_extras2.log 2>&1 &   # waits for run_extras.sh; wrong-guess Wiener + noisy inputs (~1 h)
+nohup scripts/sync_results.sh > results/sync.log 2>&1 &         # optional: push docs/results.md every 45 min
 ```
-All are resumable (finished runs have a `metrics.json` and are skipped). If the machine restarts, re-run the three commands
-(`nohup scripts/run_all.sh > results/run_all.log 2>&1 &`, same for the others). Check progress with `tail results/run_all.log`.
+`run_extras.sh` first re-runs the free-form regularizer ablation step, which is already done and is skipped.
+**Priority if time is short:** run only the robustness checks first:
+`python scripts/run_matrix.py --combos bonsai:gaussian:medium bonsai:defocus:medium --methods wiener_guess_s1 wiener_guess_s4`
+then `python scripts/run_matrix.py --combos bonsai:gaussian:medium:0.02 --methods vanilla wiener_guess ours_gauss ours_oracle_kernel` (~1 h total).
+After runs: `python scripts/collect.py && python scripts/make_figures.py && python scripts/build_slides.py`.
 
 ## Still to do
-1. When queues finish: `python scripts/collect.py && python scripts/make_figures.py`, review every figure and table.
-2. Write the analysis (why free-form collapses; ablations; seed variation; defocus vs motion; limits) into the README results section.
-3. Build the slide deck from [slides_outline.md](slides_outline.md) with the final numbers.
-4. Optional, needs download approval: real Deblur-NeRF scenes (qualitative; data is LLFF format, may need a pose converter),
-   comparison with the official Deblurring-3DGS code (custom CUDA build, risky).
-5. Add teammate name/roll number to README; final push; package code + results + slides for Moodle (Nov 5-6).
-
-## Gotchas
-- `pkill -f` / `pgrep -f` with a pattern that appears in your own command line matches itself; use `pgrep -x <name>` or kill by PID.
-- Do not edit a bash script while it is running.
-- Free-form softmax kernels collapse to a delta in every setting tried; use the polyline (motion) or gaussian (defocus/blur) prior.
+1. Run the extras above (at least the robustness checks), then regenerate tables, figures and the deck.
+2. Rewrite the blur-type slide and README results text honestly in light of the defocus / Gaussian results and the wrong-guess / noisy runs.
+3. Write the README results section and a short report (analysis: why free-form collapses, per-view kernels essential, views ablation, limits).
+4. Review `docs/slides.pptx` (draft, generated by `scripts/build_slides.py`; slide copy and speaker notes are written but not final); rehearse the 10-minute talk.
+5. Optional, needs download approval: real Deblur-NeRF scenes (qualitative; LLFF format), official Deblurring-3DGS code comparison (risky).
+6. Add teammate name/roll number to README; final push; package code + results + slides for Moodle (Nov 5-6).
 
 ## Environment (all local)
 - Repo: `/home/ishaan/Desktop/blur-robust-3dgs` (private: https://github.com/IshaanM05/blur-robust-3dgs).

@@ -44,3 +44,11 @@ One entry per experiment: date, config, what changed, result, takeaway.
 - **counter/motion_medium:** Wiener oracle 28.19, ours oracle 27.96, **ours polyline 27.72**, RL guess 25.56, Wiener guess 25.46, vanilla 25.40 (kernel L2 0.145). Same ordering as bonsai.
 - **garden/motion_medium (partial):** vanilla 23.18, Wiener oracle 25.76; remaining runs pending.
 - **Caveat:** single seed. Garden runs grow to ~3M Gaussians and take 13-16 min each.
+
+## 2026-11-04: ablations, seeds, free-form regularizers, other blur types (bonsai, 10k iters; full tables in docs/results.md)
+- **Seeds (3 training seeds, same blurred data):** polyline 30.02 +- 0.08, vanilla 26.29 +- 0.18, Wiener guess 26.76 +- 0.06.
+- **Ablations (motion medium):** control points 3/6/12 = 29.77/29.93/30.11; kernel size 15/25/35 = 29.95/29.93/30.08; shared kernel 26.72;
+  training views 255/100/50/25 = 29.93/29.52/27.46/23.64 (vanilla 26.42/-/25.09/22.32).
+- **Free-form + regularizers:** sparsity 26.49, TV 25.94, all three 26.46 (kernel L2 0.94/0.61/0.81): no rescue.
+- **Defocus / Gaussian blur:** polyline and gaussian kernels are not clearly best; the guessed Gaussian kernel (sigma 2) equals the true kernel
+  on the Gaussian-blur set. Wrong-guess (sigma 1, 4) and noisy-input runs pending.
