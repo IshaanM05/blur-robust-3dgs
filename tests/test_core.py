@@ -88,3 +88,19 @@ def test_rasterizer_shape_and_grad(mode):
 def test_best_shift_l2_ignores_translation():
     k = make_kernel("motion", "medium", 25, np.random.default_rng(3))
     assert best_shift_l2(np.roll(k, (1, 2), (0, 1)), k) < 1e-6
+
+
+def test_gaussian_kernels_normalized_differentiable():
+    from blur3dgs.kernel_est.module import GaussianKernels
+    m = GaussianKernels(2, 25)
+    k = m(1)
+    assert k.shape == (25, 25) and abs(float(k.sum()) - 1) < 1e-5 and float(k.min()) >= 0
+    (k * torch.randn(25, 25)).sum().backward()
+    assert m.p.grad is not None and m.p.grad.abs().sum() > 0
+
+
+def test_match_size_roundtrip():
+    from blur3dgs.gs3d.train import _match_size
+    k = make_kernel("gaussian", "medium", 25)
+    assert np.allclose(_match_size(_match_size(k, 35), 25), k, atol=1e-6)
+    assert _match_size(k, 15).shape == (15, 15)

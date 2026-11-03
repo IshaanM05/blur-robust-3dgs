@@ -1,4 +1,6 @@
 """Per-view learnable blur kernels: free-form KxK (softmax) and parametric polyline trajectory."""
+import math
+
 import torch
 import torch.nn as nn
 
@@ -67,3 +69,24 @@ class FixedKernels(nn.Module):
 
     def forward(self, idx: int) -> torch.Tensor:
         return self.k[idx]
+
+
+class GaussianKernels(nn.Module):
+    """Anisotropic Gaussian per view (log-sigma x/y + angle): a 3-parameter prior for defocus / Gaussian-like blur."""
+
+    def __init__(self, n_views: int, ksize: int = 25, init_sigma: float = 1.5):
+        super().__init__()
+        self.ksize = ksize
+        self.p = nn.Parameter(torch.tensor([math.log(init_sigma), math.log(init_sigma), 0.0]).repeat(n_views, 1))
+        r = torch.arange(ksize, dtype=torch.float32) - ksize // 2
+        yy, xx = torch.meshgrid(r, r, indexing="ij")
+        self.register_buffer("xx", xx)
+        self.register_buffer("yy", yy)
+
+    def forward(self, idx: int) -> torch.Tensor:
+        lsx, lsy, th = self.p[idx]
+        c, s = torch.cos(th), torch.sin(th)
+        u = c * self.xx + s * self.yy
+        v = -s * self.xx + c * self.yy
+        k = torch.exp(-0.5 * ((u / lsx.exp()) ** 2 + (v / lsy.exp()) ** 2))
+        return k / k.sum()

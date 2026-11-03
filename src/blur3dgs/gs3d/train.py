@@ -17,12 +17,24 @@ from scipy.spatial import cKDTree
 
 from ..analysis.kernel_recovery import best_shift_l2
 from ..analysis.metrics import all_metrics
-from ..kernel_est.module import FixedKernels, FreeFormKernels, PolylineKernels
+from ..kernel_est.module import FixedKernels, FreeFormKernels, GaussianKernels, PolylineKernels
 from ..kernel_est.regularizers import kernel_reg
 from ..ops import apply_kernel, ssim_loss
 from .dataset import Scene
 
 SH0 = 0.28209479177387814
+
+
+def _match_size(k: np.ndarray, n: int) -> np.ndarray:
+    """Center-crop or zero-pad a square kernel to n x n so kernels of different ksize can be compared (renormalized)."""
+    m = k.shape[0]
+    if m > n:
+        a = (m - n) // 2
+        k = k[a:a + n, a:a + n]
+    elif m < n:
+        a = (n - m) // 2
+        k = np.pad(k, ((a, n - m - a), (a, n - m - a)))
+    return k / max(k.sum(), 1e-12)
 
 
 def init_params(scene: Scene, sh_degree: int, device: str):
@@ -51,7 +63,7 @@ def render(params, viewmat, K, hw, sh_degree, device):
 
 def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 10000, kernel: str = "none",
           ksize: int = 25, kernel_start: int = 500, lr_kernel: float = 1e-2, reg: dict | None = None,
-          shared_kernel: bool = False, kernel_init_sigma: float = 1.0, poly_init_len: float = 1.0, gt_kernels: np.ndarray | None = None, sh_degree: int = 3, seed: int = 0,
+          shared_kernel: bool = False, kernel_init_sigma: float = 1.0, poly_init_len: float = 1.0, n_ctrl: int = 6, gt_kernels: np.ndarray | None = None, sh_degree: int = 3, seed: int = 0,
           device: str = "cuda", eval_every: int = 0):
     """train_images: (n_train,H,W,3) uint8 images the model is fit to (blurry, deblurred, or sharp).
     kernel: 'none' (vanilla) | 'free' | 'polyline'. Returns metrics dict (sharp held-out views)."""
@@ -77,8 +89,10 @@ def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 100
             kmod = FixedKernels(gt_kernels).to(device)
         elif kernel == "free":
             kmod = FreeFormKernels(n_k, ksize, init_sigma=kernel_init_sigma).to(device)
+        elif kernel == "gauss":
+            kmod = GaussianKernels(n_k, ksize).to(device)
         else:
-            kmod = PolylineKernels(n_k, ksize, init_len=poly_init_len).to(device)
+            kmod = PolylineKernels(n_k, ksize, n_ctrl=n_ctrl, init_len=poly_init_len).to(device)
         if kernel != "oracle":
             kopt = torch.optim.Adam(kmod.parameters(), lr=lr_kernel)
 
@@ -117,7 +131,7 @@ def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 100
             ks = torch.stack([kmod(0 if shared_kernel else i) for i in range(n_tr)]).cpu().numpy()
         np.save(out / "kernels.npy", ks)
         if gt_kernels is not None:
-            metrics["kernel_best_shift_l2"] = float(np.mean([best_shift_l2(ks[j if not shared_kernel else 0], gt_kernels[j])
+            metrics["kernel_best_shift_l2"] = float(np.mean([best_shift_l2(_match_size(ks[j if not shared_kernel else 0], gt_kernels[j].shape[0]), gt_kernels[j])
                                                              for j in range(n_tr)]))
     json.dump(metrics, open(out / "metrics.json", "w"), indent=1)
     return metrics

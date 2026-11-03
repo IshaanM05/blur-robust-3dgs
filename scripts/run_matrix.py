@@ -13,6 +13,20 @@ METHODS = {  # name -> (deblur prep (method, kernel) or None, train args)
     "rl_guess":      (("rl", "guess"), ["--input", "deblur_rl_guess"]),
     "ours_polyline": (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05"]),
     "ours_oracle_kernel": (None, ["--input", "blurred", "--kernel", "oracle", "--kernel_start", "0"]),
+    # parametric anisotropic-Gaussian kernel (for defocus / gaussian blur)
+    "ours_gauss": (None, ["--input", "blurred", "--kernel", "gauss", "--kernel_start", "0", "--lr_kernel", "0.02"]),
+    # ablations of ours_polyline (run on one scene)
+    "abl_ctrl3":  (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--n_ctrl", "3"]),
+    "abl_ctrl12": (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--n_ctrl", "12"]),
+    "abl_k15":    (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--ksize", "15"]),
+    "abl_k35":    (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--ksize", "35"]),
+    "abl_shared": (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--shared_kernel"]),
+    "abl_views100": (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--train_views", "100"]),
+    "abl_views50":  (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--train_views", "50"]),
+    "abl_views25":  (None, ["--input", "blurred", "--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05", "--train_views", "25"]),
+    # vanilla with fewer views, to see how the gap changes
+    "vanilla_views50": (None, ["--input", "blurred", "--train_views", "50"]),
+    "vanilla_views25": (None, ["--input", "blurred", "--train_views", "25"]),
 }
 DEFAULT = ["vanilla", "wiener_oracle", "wiener_guess", "rl_guess", "ours_polyline", "ours_oracle_kernel"]
 
