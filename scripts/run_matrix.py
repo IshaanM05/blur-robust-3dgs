@@ -169,6 +169,26 @@ METHODS = {  # name -> (deblur prep (method, kernel) or None, train args)
             "25",
         ],
     ),
+    # free-form kernel with regularizers (does a better prior alone rescue it?)
+    "abl_free_sparse": (None, ["--input", "blurred", "--kernel", "free", "--lr_kernel", "0.1", "--w_sparse", "0.01"]),
+    "abl_free_tv": (None, ["--input", "blurred", "--kernel", "free", "--lr_kernel", "0.1", "--w_tv", "0.05"]),
+    "abl_free_all": (
+        None,
+        [
+            "--input",
+            "blurred",
+            "--kernel",
+            "free",
+            "--lr_kernel",
+            "0.1",
+            "--w_centroid",
+            "1.0",
+            "--w_sparse",
+            "0.01",
+            "--w_tv",
+            "0.05",
+        ],
+    ),
     # vanilla with fewer views, to see how the gap changes
     "vanilla_views50": (None, ["--input", "blurred", "--train_views", "50"]),
     "vanilla_views25": (None, ["--input", "blurred", "--train_views", "25"]),
