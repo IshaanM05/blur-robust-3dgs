@@ -1,4 +1,5 @@
 """Kernel regularizers. Each takes a (K,K) kernel and returns a scalar; combine via `kernel_reg`."""
+
 import torch
 
 
@@ -18,11 +19,6 @@ def sparsity_loss(k: torch.Tensor, p: float = 0.5) -> torch.Tensor:
 
 def tv_loss(k: torch.Tensor) -> torch.Tensor:
     return (k[1:] - k[:-1]).abs().sum() + (k[:, 1:] - k[:, :-1]).abs().sum()
-
-
-def sum_to_one_loss(k: torch.Tensor) -> torch.Tensor:
-    """Only needed for kernels that are not normalized by construction (softmax/polyline already are)."""
-    return (k.sum() - 1) ** 2 + torch.relu(-k).sum()
 
 
 def kernel_reg(k: torch.Tensor, w_centroid: float = 0.0, w_sparse: float = 0.0, w_tv: float = 0.0) -> torch.Tensor:

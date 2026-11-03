@@ -1,4 +1,5 @@
 """PSNR, SSIM, LPIPS on (H,W,3) float images in [0,1]."""
+
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 
@@ -17,6 +18,7 @@ def lpips_dist(a: np.ndarray, b: np.ndarray, device: str = "cuda") -> float:
     global _lpips_model
     import lpips
     import torch
+
     if _lpips_model is None:
         _lpips_model = lpips.LPIPS(net="alex", verbose=False).to(device).eval()
     t = lambda x: torch.from_numpy(x).permute(2, 0, 1)[None].float().to(device) * 2 - 1

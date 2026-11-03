@@ -1,4 +1,5 @@
 """Shared differentiable ops. Blur is a true convolution with an odd-sized kernel centered at K//2."""
+
 import torch
 import torch.nn.functional as F
 

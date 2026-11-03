@@ -1,4 +1,5 @@
 """Richardson-Lucy deconvolution with a given (oracle or guessed) kernel."""
+
 import numpy as np
 from scipy.signal import fftconvolve
 

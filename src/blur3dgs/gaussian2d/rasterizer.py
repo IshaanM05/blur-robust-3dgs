@@ -8,13 +8,15 @@ Two compositing modes:
   'alpha' : I(p) = sum_i c_i a_i prod_{j<i}(1-a_j), a_i = sigmoid(o_i) G_i(p), sorted by z (front to back)
 Memory is O(H*W*N), fine for ~128x128 and N up to a few thousand.
 """
+
+import math
+
 import torch
 import torch.nn as nn
 
 
 class Gaussians2D(nn.Module):
-    def __init__(self, n: int, h: int, w: int, mode: str = "sum", init_rgb: torch.Tensor | None = None,
-                 seed: int = 0):
+    def __init__(self, n: int, h: int, w: int, mode: str = "sum", seed: int = 0):
         super().__init__()
         assert mode in ("sum", "alpha")
         self.h, self.w, self.mode = h, w, mode
@@ -24,14 +26,14 @@ class Gaussians2D(nn.Module):
         grid = torch.stack([xs.flatten(), ys.flatten()], 1)[:n]
         grid = grid + 0.3 * (torch.rand(grid.shape, generator=g) - 0.5) * (w / side)
         self.mu = nn.Parameter(grid)
-        self.log_s = nn.Parameter(torch.full((n, 2), float(torch.log(torch.tensor(1.2 * w / side)))))
+        self.log_s = nn.Parameter(torch.full((n, 2), math.log(1.2 * w / side)))
         self.theta = nn.Parameter(torch.zeros(n))
-        rgb = torch.rand(n, 3, generator=g) * 0.1 if init_rgb is None else init_rgb.clone()
-        self.rgb = nn.Parameter(rgb / (1.0 if mode == "alpha" else max(1.0, n / (side * side) * 1.0)))
+        self.rgb = nn.Parameter(0.1 * torch.rand(n, 3, generator=g))
         self.opacity = nn.Parameter(torch.full((n,), 2.0))
         self.depth = nn.Parameter(torch.rand(n, generator=g))
-        ys, xs = torch.meshgrid(torch.arange(h, dtype=torch.float32), torch.arange(w, dtype=torch.float32),
-                                indexing="ij")
+        ys, xs = torch.meshgrid(
+            torch.arange(h, dtype=torch.float32), torch.arange(w, dtype=torch.float32), indexing="ij"
+        )
         self.register_buffer("pix", torch.stack([xs.flatten(), ys.flatten()], 1))
 
     def footprints(self) -> torch.Tensor:

@@ -3,6 +3,7 @@
 All kernels are KxK (K odd), non-negative, sum to 1, centroid at the center pixel.
 Severity values are in pixels at the `images_4` working resolution.
 """
+
 import numpy as np
 
 SEVERITIES = ("low", "medium", "high")

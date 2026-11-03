@@ -1,4 +1,5 @@
 """Radially averaged power spectrum: shows which spatial frequencies each method recovers."""
+
 import numpy as np
 
 

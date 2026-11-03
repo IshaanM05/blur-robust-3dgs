@@ -1,4 +1,5 @@
 """Per-view learnable blur kernels: free-form KxK (softmax) and parametric polyline trajectory."""
+
 import math
 
 import torch

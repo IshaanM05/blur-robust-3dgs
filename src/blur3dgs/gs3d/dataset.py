@@ -2,6 +2,7 @@
 
 Standard split: every `test_every`-th image (sorted by name) is a test view.
 """
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,11 +13,11 @@ import numpy as np
 @dataclass
 class Scene:
     names: list
-    images: np.ndarray      # (V,H,W,3) uint8, sharp ground truth
-    viewmats: np.ndarray    # (V,4,4) world->camera
-    Ks: np.ndarray          # (V,3,3) at the images' resolution
-    points: np.ndarray      # (P,3)
-    colors: np.ndarray      # (P,3) uint8
+    images: np.ndarray  # (V,H,W,3) uint8, sharp ground truth
+    viewmats: np.ndarray  # (V,4,4) world->camera
+    Ks: np.ndarray  # (V,3,3) at the images' resolution
+    points: np.ndarray  # (P,3)
+    colors: np.ndarray  # (P,3) uint8
     train_idx: np.ndarray
     test_idx: np.ndarray
     scene_scale: float
@@ -35,6 +36,7 @@ def _pose(img):
 
 def load_scene(root: str | Path, factor: int = 4, test_every: int = 8, max_views: int | None = None) -> Scene:
     import pycolmap
+
     root = Path(root)
     rec = pycolmap.Reconstruction(str(root / "sparse" / "0"))
     img_dir = root / f"images_{factor}"

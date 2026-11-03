@@ -2,6 +2,7 @@
 Usage: python scripts/prepare_blur.py --scene bonsai --kind motion --severity medium [--shared]
 Output: data/blurred/<scene>/<kind>_<severity>[_shared]/{blurred.npy (uint8), kernels.npy}
 """
+
 import argparse
 from pathlib import Path
 
@@ -11,10 +12,14 @@ from blur3dgs.degradation.simulate import blur_views
 from blur3dgs.gs3d.dataset import load_scene
 
 p = argparse.ArgumentParser()
-p.add_argument("--root", default="data/mipnerf360"); p.add_argument("--scene", required=True)
-p.add_argument("--kind", default="motion"); p.add_argument("--severity", default="medium")
-p.add_argument("--seed", type=int, default=0); p.add_argument("--shared", action="store_true")
-p.add_argument("--noise", type=float, default=0.0); p.add_argument("--max_views", type=int, default=None)
+p.add_argument("--root", default="data/mipnerf360")
+p.add_argument("--scene", required=True)
+p.add_argument("--kind", default="motion")
+p.add_argument("--severity", default="medium")
+p.add_argument("--seed", type=int, default=0)
+p.add_argument("--shared", action="store_true")
+p.add_argument("--noise", type=float, default=0.0)
+p.add_argument("--max_views", type=int, default=None)
 a = p.parse_args()
 sc = load_scene(Path(a.root) / a.scene, max_views=a.max_views)
 clean = sc.images[sc.train_idx].astype(np.float32) / 255

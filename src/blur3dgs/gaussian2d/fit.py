@@ -3,6 +3,7 @@
 Model: target ~= kernel * render(G). With a known kernel this is non-blind deconvolution through the Gaussian
 representation; with `learn_kernel=True` the kernel is a free-form softmax kernel optimized jointly.
 """
+
 import numpy as np
 import torch
 
@@ -12,9 +13,21 @@ from ..ops import apply_kernel
 from .rasterizer import Gaussians2D
 
 
-def fit_image(target: np.ndarray, n: int = 1024, iters: int = 1500, mode: str = "sum", kernel: np.ndarray | None = None,
-              learn_kernel: bool = False, ksize: int = 15, reg: dict | None = None, lr: float = 5e-2,
-              lr_kernel: float = 5e-2, seed: int = 0, device: str = "cuda", log_every: int = 0):
+def fit_image(
+    target: np.ndarray,
+    n: int = 1024,
+    iters: int = 1500,
+    mode: str = "sum",
+    kernel: np.ndarray | None = None,
+    learn_kernel: bool = False,
+    ksize: int = 15,
+    reg: dict | None = None,
+    lr: float = 5e-2,
+    lr_kernel: float = 5e-2,
+    seed: int = 0,
+    device: str = "cuda",
+    log_every: int = 0,
+):
     """target: (H,W,3) float in [0,1]. Returns dict(render (H,W,3), kernel (K,K) or None, history, model)."""
     h, w = target.shape[:2]
     tgt = torch.from_numpy(target).permute(2, 0, 1).float().to(device)
@@ -44,6 +57,6 @@ def fit_image(target: np.ndarray, n: int = 1024, iters: int = 1500, mode: str = 
             print(f"it {it:5d} loss {hist[-1]:.5f}")
     with torch.no_grad():
         sharp = model().clamp(0, 1).permute(1, 2, 0).cpu().numpy()
-        k_np = (est(0) if est is not None else fixed)
+        k_np = est(0) if est is not None else fixed
         k_np = k_np.cpu().numpy() if k_np is not None else None
     return {"render": sharp, "kernel": k_np, "history": hist, "model": model}

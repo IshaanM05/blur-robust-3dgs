@@ -4,6 +4,7 @@ Training minimizes  L(kernel_i * render(G, pose_i), blurry_i)  over Gaussians G 
 At test time the kernel is NOT applied: the sharp render is compared to the sharp held-out ground truth.
 gsplat provides only the rasterizer and the densification strategy; everything else is ours.
 """
+
 import json
 import time
 from pathlib import Path
@@ -30,7 +31,7 @@ def _match_size(k: np.ndarray, n: int) -> np.ndarray:
     m = k.shape[0]
     if m > n:
         a = (m - n) // 2
-        k = k[a:a + n, a:a + n]
+        k = k[a : a + n, a : a + n]
     elif m < n:
         a = (n - m) // 2
         k = np.pad(k, ((a, n - m - a), (a, n - m - a)))
@@ -45,26 +46,57 @@ def init_params(scene: Scene, sh_degree: int, device: str):
     rgb = torch.from_numpy(scene.colors).float() / 255
     sh = torch.zeros(len(pts), (sh_degree + 1) ** 2, 3)
     sh[:, 0] = (rgb - 0.5) / SH0
-    p = torch.nn.ParameterDict({
-        "means": pts, "scales": scales, "quats": quats,
-        "opacities": torch.logit(torch.full((len(pts),), 0.1)),
-        "sh0": sh[:, :1], "shN": sh[:, 1:]}).to(device)
+    p = torch.nn.ParameterDict(
+        {
+            "means": pts,
+            "scales": scales,
+            "quats": quats,
+            "opacities": torch.logit(torch.full((len(pts),), 0.1)),
+            "sh0": sh[:, :1],
+            "shN": sh[:, 1:],
+        }
+    ).to(device)
     return {k: torch.nn.Parameter(v) for k, v in p.items()}
 
 
 def render(params, viewmat, K, hw, sh_degree, device):
     colors = torch.cat([params["sh0"], params["shN"]], 1)
     out, alpha, info = rasterization(
-        params["means"], F.normalize(params["quats"], dim=-1), torch.exp(params["scales"]),
-        torch.sigmoid(params["opacities"]), colors, viewmat[None], K[None], hw[1], hw[0],
-        sh_degree=sh_degree, packed=False)
+        params["means"],
+        F.normalize(params["quats"], dim=-1),
+        torch.exp(params["scales"]),
+        torch.sigmoid(params["opacities"]),
+        colors,
+        viewmat[None],
+        K[None],
+        hw[1],
+        hw[0],
+        sh_degree=sh_degree,
+        packed=False,
+    )
     return out[0].permute(2, 0, 1).clamp(0, 1), info  # (3,H,W)
 
 
-def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 10000, kernel: str = "none",
-          ksize: int = 25, kernel_start: int = 500, lr_kernel: float = 1e-2, reg: dict | None = None,
-          shared_kernel: bool = False, kernel_init_sigma: float = 1.0, poly_init_len: float = 1.0, n_ctrl: int = 6, gt_kernels: np.ndarray | None = None, sh_degree: int = 3, seed: int = 0,
-          device: str = "cuda", eval_every: int = 0):
+def train(
+    scene: Scene,
+    train_images: np.ndarray,
+    out_dir: str,
+    iters: int = 10000,
+    kernel: str = "none",
+    ksize: int = 25,
+    kernel_start: int = 500,
+    lr_kernel: float = 1e-2,
+    reg: dict | None = None,
+    shared_kernel: bool = False,
+    kernel_init_sigma: float = 1.0,
+    poly_init_len: float = 1.0,
+    n_ctrl: int = 6,
+    gt_kernels: np.ndarray | None = None,
+    sh_degree: int = 3,
+    seed: int = 0,
+    device: str = "cuda",
+    eval_every: int = 0,
+):
     """train_images: (n_train,H,W,3) uint8 images the model is fit to (blurry, deblurred, or sharp).
     kernel: 'none' (vanilla) | 'free' | 'polyline'. Returns metrics dict (sharp held-out views)."""
     torch.manual_seed(seed)
@@ -73,8 +105,14 @@ def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 100
     out.mkdir(parents=True, exist_ok=True)
     hw = scene.hw
     params = init_params(scene, sh_degree, device)
-    lrs = {"means": 1.6e-4 * scene.scene_scale, "scales": 5e-3, "quats": 1e-3, "opacities": 5e-2,
-           "sh0": 2.5e-3, "shN": 2.5e-3 / 20}
+    lrs = {
+        "means": 1.6e-4 * scene.scene_scale,
+        "scales": 5e-3,
+        "quats": 1e-3,
+        "opacities": 5e-2,
+        "sh0": 2.5e-3,
+        "shN": 2.5e-3 / 20,
+    }
     opts = {k: torch.optim.Adam([{"params": params[k], "lr": lrs[k]}], eps=1e-15) for k in params}
     strat = DefaultStrategy(refine_stop_iter=int(iters * 0.5), reset_every=max(iters // 10, 300), verbose=False)
     strat.check_sanity(params, opts)
@@ -115,14 +153,19 @@ def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 100
         strat.step_pre_backward(params, opts, state, step, info)
         loss.backward()
         for o in opts.values():
-            o.step(); o.zero_grad(set_to_none=True)
+            o.step()
+            o.zero_grad(set_to_none=True)
         if kopt is not None:
-            kopt.step(); kopt.zero_grad(set_to_none=True)
+            kopt.step()
+            kopt.zero_grad(set_to_none=True)
         strat.step_post_backward(params, opts, state, step, info, packed=False)
         sched.step()
         hist.append(float(loss))
         if step % 500 == 0:
-            print(f"step {step:6d} loss {np.mean(hist[-100:]):.4f} n={len(params['means'])} t={time.time()-t0:.0f}s", flush=True)
+            print(
+                f"step {step:6d} loss {np.mean(hist[-100:]):.4f} n={len(params['means'])} t={time.time() - t0:.0f}s",
+                flush=True,
+            )
 
     metrics = evaluate(params, scene, vm, Ks, sh_degree, device, out)
     metrics.update(train_seconds=time.time() - t0, n_gaussians=int(len(params["means"])), iters=iters, kernel=kernel)
@@ -131,8 +174,16 @@ def train(scene: Scene, train_images: np.ndarray, out_dir: str, iters: int = 100
             ks = torch.stack([kmod(0 if shared_kernel else i) for i in range(n_tr)]).cpu().numpy()
         np.save(out / "kernels.npy", ks)
         if gt_kernels is not None:
-            metrics["kernel_best_shift_l2"] = float(np.mean([best_shift_l2(_match_size(ks[j if not shared_kernel else 0], gt_kernels[j].shape[0]), gt_kernels[j])
-                                                             for j in range(n_tr)]))
+            metrics["kernel_best_shift_l2"] = float(
+                np.mean(
+                    [
+                        best_shift_l2(
+                            _match_size(ks[j if not shared_kernel else 0], gt_kernels[j].shape[0]), gt_kernels[j]
+                        )
+                        for j in range(n_tr)
+                    ]
+                )
+            )
     json.dump(metrics, open(out / "metrics.json", "w"), indent=1)
     return metrics
 
@@ -147,5 +198,6 @@ def evaluate(params, scene, vm, Ks, sh_degree, device, out: Path, save_n: int = 
         rows.append(all_metrics(p, g))
         if j < save_n:
             import imageio.v2 as imageio
+
             imageio.imwrite(out / f"test_{j}.png", (p * 255).astype(np.uint8))
     return {k: float(np.mean([r[k] for r in rows])) for k in rows[0]}
