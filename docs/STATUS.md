@@ -1,51 +1,45 @@
-# Status and how to resume (paused 2026-10-31, ~16:55 IST; second pause)
+# Status and how to resume
 
-Deadline: **Nov 6**. Plan: [plan.md](plan.md). Experiment results: [log.md](log.md). Figures: [figures/](figures/).
+Last updated: 2026-11-03 night. **Deadline: Nov 6.** Plan: [plan.md](plan.md). Full tables: [results.md](results.md). Figures: [figures/](figures/). Talk outline: [slides_outline.md](slides_outline.md).
 
 ## Where we are
-Pipeline, baselines and the proposed method are done and working. Full tables are auto-generated in [results.md](results.md)
-(`python scripts/collect.py`). All numbers: held-out sharp views, 10k iterations, single seed, motion blur.
+Pipeline, baselines and the proposed method are done. Experiments are running unattended (see below).
+Motion blur results (PSNR, held-out sharp views, 10k iterations, one seed):
 
-| Method | bonsai medium (PSNR) | counter medium (PSNR) | knows true kernel? |
-|---|---|---|---|
-| Wiener pre-deblur, true kernel (reference) | 30.99 | 28.19 | yes |
-| ours, oracle kernels (upper bound) | 30.40 | 27.96 | yes |
-| **ours, polyline kernels (blind)** | **29.93** | **27.72** | no |
-| RL pre-deblur, guessed kernel | 26.84 | 25.56 | no |
-| Wiener pre-deblur, guessed kernel | 26.82 | 25.46 | no |
-| vanilla 3DGS on blurry input | 26.42 | 25.40 | no |
-| ours, free-form kernels | 26.1-26.5 (collapse to delta) | not run | no |
+| Setting | vanilla | best blind classical | ours (polyline, blind) | ours (oracle kernels) |
+|---|---|---|---|---|
+| bonsai, low | 28.49 | 25.20 | 30.49 | 30.76 |
+| bonsai, medium | 26.42 | 26.84 | 29.93 | 30.40 |
+| bonsai, high | 25.04 | 25.31 | 29.50 | 30.03 |
+| counter, medium | 25.40 | 25.56 | 27.72 | 27.96 |
+| garden, medium | 23.18 | 22.86 | 25.17 | 25.27 |
 
-Findings so far: forward model is correct (oracle kernels); free-form per-view kernels collapse to a delta; the polyline kernel prior recovers
-kernels (L2 0.15 vs 0.99 for a delta) and beats the best blind classical baseline by ~3.1 dB (bonsai) and ~2.2 dB (counter), within 0.5 dB of the
-oracle. Same ordering on both scenes. **Checkpoint decision: proper plan stays.**
+Findings: the forward model is correct (oracle kernels); free-form per-view kernels collapse to a delta; the polyline kernel prior recovers
+the kernels (L2 ~0.15 vs 0.99 for a delta) and stays within ~0.1-0.5 dB of the oracle. The gain over vanilla grows with severity
+(+2.0 dB low, +3.5 medium, +4.5 high). Defocus blur (a disk) is weaker for the polyline prior (27.54 vs vanilla 26.70, oracle 28.62);
+the anisotropic-Gaussian kernel (`ours_gauss`) is queued to address it.
 
-**garden / motion_medium (partial, 2 of 6 done):** vanilla 23.18 dB, Wiener oracle 25.76 dB (~3M Gaussians, ~13 min per run).
-Remaining there: `wiener_guess` (done, not yet in table: collect), `rl_guess`, `ours_polyline`, `ours_oracle_kernel`.
-
-## Settings that worked (defaults in `scripts/run_matrix.py`)
-`--kernel polyline --poly_init_len 6 --kernel_start 0 --lr_kernel 0.05 --iters 10000`. Runs take ~4 min (counter), ~6 min (bonsai), ~13-16 min (garden).
-
-## RESUME HERE: one command
-The matrix runner is resumable (skips anything with a `metrics.json`; a half-finished run restarts from scratch):
+## What is running
 ```bash
-cd /home/ishaan/Desktop/blur-robust-3dgs && . .venv/bin/activate
-nohup python scripts/run_matrix.py --combos garden:motion:medium bonsai:motion:low bonsai:motion:high > results/matrix_main2.log 2>&1 &
+scripts/run_all.sh        # main matrix, severity sweep, blur types, ablations, seeds   (~midnight)
+scripts/run_extras.sh     # waits for run_all.sh; regularizer ablation, counter severities, extra baselines (~3 AM)
+scripts/sync_results.sh   # every 45 min: regenerate docs/results.md and push if changed
 ```
-That finishes garden (3 runs left, ~45 min) then bonsai low/high severity (12 runs, ~70 min). Check progress with `cat results/matrix_main2.log`.
-Do NOT start it twice. Stop it with `kill <pid of python scripts/run_matrix.py>` and also kill its child `scripts/train.py` or `scripts/prepare_deblur.py`.
-Then `python scripts/collect.py` to refresh [results.md](results.md).
+All are resumable (finished runs have a `metrics.json` and are skipped). If the machine restarts, re-run the three commands
+(`nohup scripts/run_all.sh > results/run_all.log 2>&1 &`, same for the others). Check progress with `tail results/run_all.log`.
 
-## After that (remaining work, in order)
-1. **Other blur types:** `bonsai:defocus:medium`, `bonsai:gaussian:medium`. Expect polyline to struggle (a curve cannot represent a disk or blob);
-   if so add an anisotropic-Gaussian parametric kernel as a third parameterization and report both. High value for the "when does it work" story.
-2. **Ablations (bonsai medium motion):** polyline control points (`PolylineKernels(n_ctrl=...)`, add a CLI flag), kernel size (`--ksize`),
-   regularizers (`--w_centroid/--w_sparse/--w_tv` for free-form), shared vs per-view (`--shared_kernel`), number of views (`--max_views`, e.g. 100/50/25).
-   Add them as named methods in `scripts/run_matrix.py` (METHODS dict) so they are resumable too.
-3. **Seeds:** rerun the 6 main methods on bonsai medium with `--seed 1 2` and `--suffix _seed1` for error bars (cheap, ~35 min per seed).
-4. **Analysis plots:** radial power spectra (`analysis/spectrum.py`) of renders vs GT, kernel-recovery vs severity, qualitative render panels (see `docs/figures/`).
-5. **Optional:** Deblur-NeRF real scenes (qualitative), official Deblurring-3DGS comparison.
-6. **Slides + README polish + rehearsal** (Nov 5), submit Nov 6. Add teammate name/roll number to README (invite to @purvanyaTyagi was sent; confirm accepted).
+## Still to do
+1. When queues finish: `python scripts/collect.py && python scripts/make_figures.py`, review every figure and table.
+2. Write the analysis (why free-form collapses; ablations; seed variation; defocus vs motion; limits) into the README results section.
+3. Build the slide deck from [slides_outline.md](slides_outline.md) with the final numbers.
+4. Optional, needs download approval: real Deblur-NeRF scenes (qualitative; data is LLFF format, may need a pose converter),
+   comparison with the official Deblurring-3DGS code (custom CUDA build, risky).
+5. Add teammate name/roll number to README; final push; package code + results + slides for Moodle (Nov 5-6).
+
+## Gotchas
+- `pkill -f` / `pgrep -f` with a pattern that appears in your own command line matches itself; use `pgrep -x <name>` or kill by PID.
+- Do not edit a bash script while it is running.
+- Free-form softmax kernels collapse to a delta in every setting tried; use the polyline (motion) or gaussian (defocus/blur) prior.
 
 ## Environment (all local)
 - Repo: `/home/ishaan/Desktop/blur-robust-3dgs` (private: https://github.com/IshaanM05/blur-robust-3dgs).
