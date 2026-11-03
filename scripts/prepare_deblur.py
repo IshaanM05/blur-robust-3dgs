@@ -30,6 +30,6 @@ for i, b in enumerate(blurred):
         else richardson_lucy(x, k, 30)
     )
     outs.append((y * 255 + 0.5).astype(np.uint8))
-name = f"{a.method}_{a.kernel}"
+name = f"{a.method}_{a.kernel}" + (f"_s{a.guess_sigma:g}" if a.kernel == "guess" and a.guess_sigma != 2.0 else "")
 np.save(d / f"deblur_{name}.npy", np.stack(outs))
 print("saved", d / f"deblur_{name}.npy")
