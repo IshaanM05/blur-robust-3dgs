@@ -2,11 +2,12 @@ numpy
 scipy
 scikit-image
 matplotlib
-pyyaml
-tqdm
-lpips
+pillow
 imageio
-opencv-python
+lpips
+pycolmap
+python-pptx
 torch>=2.6
 gsplat
 pytest
+ruff

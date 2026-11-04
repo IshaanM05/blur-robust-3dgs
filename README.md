@@ -2,59 +2,125 @@
 
 CS 663 (Digital Image Processing) course project, IIT Bombay.
 
-Each blurry input view is modeled as the sharp rendering convolved with an unknown per-view
-blur kernel, `y_i = k_i * render(G, pose_i) + noise`. The Gaussians `G` and the kernels `k_i`
-are optimized jointly. The question we study is **when joint estimation works, and why**.
+3D Gaussian Splatting (3DGS) rebuilds a scene from many posed photos, but it assumes the photos are sharp. When they
+are blurred by camera motion or defocus, vanilla 3DGS bakes the blur into the scene. We treat blur as an image
+restoration problem: each photo is the sharp rendering convolved with an unknown per-photo kernel,
+
+    y_i = k_i * render(G, pose_i) + noise
+
+and we optimise the Gaussians `G` and the kernels `k_i` together. The kernel is dropped at test time, so the scene is
+rendered sharp. The question we study is **when joint estimation works, and why**.
 
 ## Team
 - Ishaan Mondal (24B2118)
-- [@purvanyaTyagi](https://github.com/purvanyaTyagi) (name and roll number to be added)
+- [@purvanyaTyagi](https://github.com/purvanyaTyagi)
 
-## Plan
-| Component | Location | From scratch? |
-|---|---|---|
-| 2D Gaussian fitter + 2D blind-deconvolution study | `src/blur3dgs/gaussian2d` | yes |
-| Blur simulator (motion, defocus, Gaussian; per-view; 3 severities) | `src/blur3dgs/degradation` | yes |
-| Wiener / Richardson-Lucy baselines (oracle and guessed kernel) | `src/blur3dgs/baselines` | yes |
-| Per-view kernel estimator (free-form, parametric, regularizers) | `src/blur3dgs/kernel_est` | yes |
-| 3D training loop on gsplat (rasterization only from gsplat) | `src/blur3dgs/gs3d` | partly |
-| Kernel-recovery error, power-spectrum analysis, metrics | `src/blur3dgs/analysis` | yes |
+## Main result
 
-Methods compared: vanilla 3DGS on blurry input, pre-deblur (oracle kernel) then 3DGS,
-pre-deblur (blind) then 3DGS, ours (free-form kernel), ours (parametric kernel), clean reference.
-Metrics: PSNR, SSIM, LPIPS on sharp held-out views.
+Motion blur on three Mip-NeRF 360 scenes, PSNR (dB) on held-out sharp views, 10k iterations. "Blind" methods do not
+know the true kernel; the last two rows use it and are upper-bound references.
 
-See [docs/STATUS.md](docs/STATUS.md) for current status and how to resume, [docs/plan.md](docs/plan.md) for scope and schedule, and [docs/log.md](docs/log.md) for the experiment log.
+| Method | bonsai | counter | garden |
+|---|---|---|---|
+| Vanilla 3DGS on blurry photos | 26.42 | 25.40 | 23.18 |
+| Wiener deblur with a guessed kernel, then 3DGS | 26.82 | 25.46 | 22.86 |
+| RL deblur with a guessed kernel, then 3DGS | 26.84 | 25.56 | not run |
+| **Ours, polyline kernel (blind)** | **29.93** | **27.72** | **25.17** |
+| Ours with the true kernels | 30.40 | 27.96 | 25.27 |
+| Wiener deblur with the true kernel, then 3DGS | 30.99 | 28.19 | 25.76 |
+
+- The polyline prior stays within 0.1 to 0.5 dB of the true-kernel result and 2 to 3.5 dB above every blind baseline.
+- The gain over vanilla grows with blur severity on bonsai: +2.0 dB (low), +3.5 dB (medium), +4.5 dB (high).
+- Over three training seeds on bonsai: ours 30.02 +- 0.08, vanilla 26.29 +- 0.18, guessed-kernel Wiener 26.76 +- 0.06.
+- A guessed kernel can be worse than doing nothing: on garden, guessed-kernel Wiener (22.86) is below vanilla (23.18).
+
+Full tables for every run are in [docs/results.md](docs/results.md); figures are in [docs/figures](docs/figures).
+
+### Why the kernel parametrisation matters
+
+A free-form per-photo kernel (a K x K softmax) is the obvious choice and it fails: the kernel collapses to a delta and
+the scene absorbs the blur, which is the trivial solution of joint blind deconvolution (Levin et al., 2009). This
+holds across learning rates, initialisations and regularisers (sparsity, TV, both): 25.9 to 26.5 dB, the same as vanilla.
+A structured prior fixes it. The polyline kernel is an exposure path of 6 control points splatted into a kernel.
+
+Ablations on bonsai (medium motion blur):
+
+| Variant | PSNR |
+|---|---|
+| Default (6 control points, 25 px kernel) | 29.93 |
+| 3 / 12 control points | 29.77 / 30.11 |
+| Kernel size 15 / 35 | 29.95 / 30.08 |
+| One kernel shared by all photos | 26.72 |
+| Free-form kernel + sparsity / TV / both | 26.49 / 25.94 / 26.46 |
+| 100 / 50 / 25 training views (vanilla at 50 / 25) | 29.52 / 27.46 / 23.64 (25.09 / 22.32) |
+
+The method is insensitive to the polyline size, a per-photo kernel is essential, and the gain shrinks as photos get
+scarce, because the kernels are only identifiable when enough views must agree on one scene.
+
+### Frequency view
+
+The radial power spectrum of a rendered test view ([docs/figures/spectrum_bonsai_motion_medium.png](docs/figures/spectrum_bonsai_motion_medium.png))
+shows vanilla 3DGS losing the high frequencies that blur removes, while our estimate recovers most of them and tracks
+the true-kernel result.
+
+## What is implemented from scratch
+| Component | Location |
+|---|---|
+| 2D Gaussian rasterizer and fitter, 2D blind-deconvolution study | `src/blur3dgs/gaussian2d` |
+| Blur simulator (motion, defocus, Gaussian; per-photo kernels; three severities) | `src/blur3dgs/degradation` |
+| Wiener and Richardson-Lucy baselines (true or guessed kernel) | `src/blur3dgs/baselines` |
+| Per-photo kernel estimators (free-form, polyline, Gaussian) and regularisers | `src/blur3dgs/kernel_est` |
+| 3DGS training loop with the blur forward model (gsplat provides only the rasterizer and densification) | `src/blur3dgs/gs3d` |
+| Metrics, power spectrum, kernel-recovery error | `src/blur3dgs/analysis` |
+
+## Reproducing
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+export PYTHONPATH=$PWD/src
+python -m pytest -q tests
+```
+Download Mip-NeRF 360 (see [data/README.md](data/README.md)), then:
+```bash
+scripts/run_all.sh        # main table, severity sweep, blur types, ablations, seeds (several hours on one GPU)
+scripts/run_extras.sh     # secondary experiments
+scripts/run_extras2.sh    # robustness checks on defocus and Gaussian blur
+python scripts/collect.py && python scripts/make_figures.py && python scripts/build_slides.py
+```
+Every run is resumable: finished runs have a `metrics.json` and are skipped. A single run, for example:
+```bash
+python scripts/prepare_blur.py --scene bonsai --kind motion --severity medium
+python scripts/train.py --scene bonsai --tag motion_medium --input blurred --kernel polyline \
+    --poly_init_len 6 --kernel_start 0 --lr_kernel 0.05 --out results/example
+```
+Experiments ran on one RTX 4080 laptop GPU (12 GB); a bonsai run takes 4 to 7 minutes, a garden run about 10 to 15.
 
 ## Layout
 ```
-configs/       experiment configs (one YAML per run)
-data/          datasets (git-ignored; see data/README.md)
-docs/          plan, experiment log, notes
-experiments/   per-experiment notes and result tables
-results/       run outputs (git-ignored except .gitkeep)
-scripts/       entry points (download, simulate, train, evaluate)
+data/          datasets and blurred caches (git-ignored)
+docs/          results tables, figures, experiment log, talk outline, draft slides
+results/       run outputs (git-ignored)
+scripts/       experiment runners, data preparation, figure and table generation
 src/blur3dgs/  library code
 tests/         unit tests
 ```
 
-## Setup
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
-```
+## Limitations
+- The blur is synthetic and global per photo. Real blur varies across the image and with depth.
+- Each blur type needs a prior that can represent it; the polyline prior is for motion blur.
+- Three scenes, three training seeds on one scene, no real blurry captures.
 
 ## References
 1. Kerbl et al., 3D Gaussian Splatting for Real-Time Radiance Field Rendering: https://arxiv.org/abs/2308.04079
 2. Ma et al., Deblur-NeRF: https://arxiv.org/abs/2111.14292
 3. Lee et al., Deblurring 3D Gaussian Splatting: https://arxiv.org/abs/2401.00834
-4. BAD-Gaussians: https://arxiv.org/abs/2403.11831
-5. Mip-Splatting: https://arxiv.org/abs/2311.16493
-6. GaussianImage: https://arxiv.org/abs/2403.08551
-7. gsplat: https://arxiv.org/abs/2409.06765
-8. Wiener deconvolution: https://en.wikipedia.org/wiki/Wiener_deconvolution ; Richardson-Lucy: https://en.wikipedia.org/wiki/Richardson%E2%80%93Lucy_deconvolution
+4. Zhao et al., BAD-Gaussians: https://arxiv.org/abs/2403.11831
+5. Yu et al., Mip-Splatting: https://arxiv.org/abs/2311.16493
+6. Zhang et al., GaussianImage: https://arxiv.org/abs/2403.08551
+7. Ye et al., gsplat: https://arxiv.org/abs/2409.06765
+8. Levin et al., Understanding and Evaluating Blind Deconvolution Algorithms, CVPR 2009
+9. Wiener deconvolution: https://en.wikipedia.org/wiki/Wiener_deconvolution; Richardson-Lucy: https://en.wikipedia.org/wiki/Richardson%E2%80%93Lucy_deconvolution
 
 ## Datasets
-- Mip-NeRF 360: https://jonbarron.info/mipnerf360/ (synthetic blur applied for ground truth)
-- Deblur-NeRF real/synthetic blurry scenes: https://drive.google.com/drive/folders/1_TkpcJnw504ZOWmgVTD7vWqPdzbk9Wx_
+- Mip-NeRF 360: https://jonbarron.info/mipnerf360/ (synthetic blur applied to get ground truth)
+- Deblur-NeRF blurry scenes: https://drive.google.com/drive/folders/1_TkpcJnw504ZOWmgVTD7vWqPdzbk9Wx_ (not used in the reported results)
