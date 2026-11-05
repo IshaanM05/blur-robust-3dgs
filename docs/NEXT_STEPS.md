@@ -12,6 +12,15 @@ Ground rules
 - Raw outputs (`results/`, `data/`) are git-ignored. Commit code, `docs/results.md`, figures and the deck only.
 - Runs are resumable; finished runs (those with a `metrics.json`) are skipped.
 
+Heads-up for a fresh clone
+- The git history was rewritten once (on Nov 4, to remove commit trailers). If you cloned before that, delete your copy and clone again;
+  `git pull` on the old clone will not work cleanly.
+- `data/` and `results/` are not in the repo. You must download Mip-NeRF 360 yourself (about 12.5 GB, see [data/README.md](../data/README.md)); the final
+  numbers are in `docs/results.md`, but new experiments need the data and a GPU with about 12 GB of memory.
+- The first training run compiles gsplat's CUDA extension, which takes about 2 minutes.
+- The deck was only checked in LibreOffice, which substitutes the fonts (Cambria and Calibri). Open `docs/slides.pptx` in real PowerPoint or Google
+  Slides and check every slide for text overflow before presenting.
+
 ## 1. Before submission (must do, no code)
 1. Add the teammate's name and roll number to the README (Team section).
 2. Read the five core papers listed in the README, then review `docs/slides.pptx`. The slide copy and speaker notes are drafts;
