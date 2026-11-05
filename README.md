@@ -131,6 +131,8 @@ src/blur3dgs/  library code
 tests/         unit tests
 ```
 
+Open work and ideas for extending the project: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
+
 ## Limitations
 - The blur is synthetic and global per photo. Real blur varies across the image and with depth.
 - Each blur type needs a prior that can represent it. The polyline prior suits motion blur; on defocus and Gaussian
