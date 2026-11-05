@@ -482,7 +482,7 @@ notes(
 
 # ---------------------------------------------------------------- 8 severity + blur types
 s = new_slide()
-title(s, "Severity and blur type")
+title(s, "Severity, and what a wrong guess costs")
 sev = ["low", "medium", "high"]
 series = [
     ("Vanilla", "vanilla", GRAY),
@@ -513,48 +513,53 @@ gf.chart.has_title = True
 gf.chart.chart_title.text_frame.text = "Motion blur severity (bonsai, PSNR dB)"
 gf.chart.chart_title.text_frame.paragraphs[0].runs[0].font.size = Pt(14)
 
-kinds = ["motion", "defocus", "gaussian"]
+blur_sets = [("gaussian_medium", "Gaussian blur"), ("defocus_medium", "Defocus")]
 
 
-def best_prior(kind):
-    cand = [psnr("bonsai", f"{kind}_medium", m) for m in ("ours_polyline", "ours_gauss")]
-    cand = [c for c in cand if c is not None]
-    return max(cand) if cand else None
+def best_prior(setting):
+    cand = [psnr("bonsai", setting, m) for m in ("ours_polyline", "ours_gauss")]
+    return max(c for c in cand if c is not None)
 
 
-bt = [
-    ("Vanilla", [psnr("bonsai", f"{k}_medium", "vanilla") for k in kinds], GRAY),
-    ("Guessed-kernel Wiener", [psnr("bonsai", f"{k}_medium", "wiener_guess") for k in kinds], TAN),
-    ("Ours (best prior)", [best_prior(k) for k in kinds], BLUE),
-    ("Oracle kernels", [psnr("bonsai", f"{k}_medium", "ours_oracle_kernel") for k in kinds], GREEN),
+guess_bars = [
+    ("Vanilla", lambda st: psnr("bonsai", st, "vanilla"), GRAY),
+    ("Wiener, guess sigma 1", lambda st: psnr("bonsai", st, "wiener_guess_s1"), "E3C9A6"),
+    ("Wiener, guess sigma 2", lambda st: psnr("bonsai", st, "wiener_guess"), TAN),
+    ("Wiener, guess sigma 4", lambda st: psnr("bonsai", st, "wiener_guess_s4"), "8C5A2B"),
+    ("Ours (blind)", best_prior, BLUE),
 ]
-bt = [t for t in bt if all(v is not None for v in t[1])]
-if bt:
+if all(f(st) is not None for _, f, _ in guess_bars for st, _ in blur_sets):
     cd2 = CategoryChartData()
-    cd2.categories = ["motion", "defocus", "gaussian"]
-    for label, vals, _ in bt:
-        cd2.add_series(label, vals)
+    cd2.categories = [name for _, name in blur_sets]
+    for label, f, _ in guess_bars:
+        cd2.add_series(label, [f(st) for st, _ in blur_sets])
     gf2 = s.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(6.9), Inches(1.5), Inches(5.9), Inches(4.7), cd2)
     style_chart(gf2.chart)
-    color_series(gf2.chart, [t[2] for t in bt])
-    gf2.chart.value_axis.minimum_scale = 24
+    color_series(gf2.chart, [c for _, _, c in guess_bars])
+    gf2.chart.value_axis.minimum_scale = 21
+    gf2.chart.value_axis.maximum_scale = 29
     gf2.chart.value_axis.major_gridlines.format.line.color.rgb = rgb("DDE3EE")
     gf2.chart.has_title = True
-    gf2.chart.chart_title.text_frame.text = "Blur type, medium severity (bonsai, PSNR dB)"
+    gf2.chart.chart_title.text_frame.text = "Wrong kernel guess (true sigma is 2), PSNR dB"
     gf2.chart.chart_title.text_frame.paragraphs[0].runs[0].font.size = Pt(14)
 text(
     s,
     0.6,
-    6.4,
+    6.35,
     W - 1.2,
     0.6,
-    "Motion blur: the polyline prior stays near the oracle at every severity. Defocus and Gaussian blur need a prior that can represent a blob, not a path.",
+    "Left: the gain over vanilla grows with motion blur. Right: classical deconvolution wins only when its guess is right "
+    "(sigma 2); at sigma 4 it falls 2.8 to 4.3 dB below doing nothing. Ours needs no guess.",
     size=14,
 )
 footer(s, 8)
 notes(
     s,
-    "1.5 min. Left: the benefit over vanilla grows with severity because there is more blur to remove. Right: the same method with the wrong prior is weaker on defocus, which is why we added the Gaussian kernel. The prior has to match the blur.",
+    "1.5 min. Left: the benefit over vanilla grows with severity because there is more blur to remove. Right: be "
+    "upfront. On Gaussian and defocus blur, Wiener with the right kernel guess beats us, but that guess was handed to "
+    "it; the true Gaussian blur has sigma 2. Change the guess to 1 or 4 and it collapses, down to below vanilla. Our "
+    "blind estimate is about 1 dB above vanilla regardless. Classical deconvolution is the better tool only if you "
+    "know the kernel.",
 )
 
 # ---------------------------------------------------------------- 9 ablations + spectrum
@@ -622,7 +627,7 @@ text(
             "The kernel prior is the whole game: free-form collapses, a structured prior matches oracle kernels on motion blur.",
             {"space_after": 10},
         ),
-        ("Guessing the kernel can be worse than doing nothing.", {}),
+        ("Classical deconvolution needs the right kernel: a wrong guess can land far below doing nothing.", {}),
     ],
     size=17,
     color="FFFFFF",

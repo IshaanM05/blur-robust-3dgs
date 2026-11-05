@@ -52,3 +52,10 @@ One entry per experiment: date, config, what changed, result, takeaway.
 - **Free-form + regularizers:** sparsity 26.49, TV 25.94, all three 26.46 (kernel L2 0.94/0.61/0.81): no rescue.
 - **Defocus / Gaussian blur:** polyline and gaussian kernels are not clearly best; the guessed Gaussian kernel (sigma 2) equals the true kernel
   on the Gaussian-blur set. Wrong-guess (sigma 1, 4) and noisy-input runs pending.
+
+## 2026-11-05: robustness checks and remaining sweeps (bonsai unless stated; tables in docs/results.md)
+- **Wrong kernel guess for Wiener (Gaussian blur / defocus):** sigma 1: 26.51 / 26.45; sigma 2 (true on the Gaussian set): 28.25 / 28.01; sigma 4: 23.46 / 22.43.
+  Vanilla 26.24 / 26.70, ours blind 27.29 / 27.54. A wrong guess drops Wiener 2.8 to 4.3 dB below vanilla.
+- **Noisy inputs (sigma 0.02, Gaussian blur):** vanilla 26.33, Wiener (sigma 2 guess) 28.05, ours 27.36, ours with true kernels 26.76. Noise at this level did not hurt Wiener.
+- **Counter severity sweep:** ours vs vanilla +1.0 (low), +2.3 (medium), +3.2 (high) dB; same trend as bonsai.
+- **Garden RL guessed kernel:** 23.09 (vanilla 23.18).

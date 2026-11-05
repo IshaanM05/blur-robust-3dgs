@@ -21,7 +21,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 LABEL = {
     "vanilla": "vanilla 3DGS",
     "wiener_oracle": "Wiener (true k)",
-    "wiener_guess": "Wiener (guessed k)",
+    "wiener_guess": "Wiener (guess sigma 2)",
     "rl_guess": "RL (guessed k)",
     "ours_polyline": "ours: polyline",
     "ours_gauss": "ours: gaussian",
@@ -216,10 +216,44 @@ def seeds(scene="bonsai", setting="motion_medium", methods=("vanilla", "wiener_g
             print(f"  {m:15s} n={len(v)} mean {np.mean(v):.2f} std {np.std(v, ddof=1):.2f}  {np.round(v, 2)}")
 
 
+def guess_sensitivity(scene="bonsai"):
+    """Wiener with a guessed Gaussian kernel (sigma 1, 2, 4) vs our blind methods. The true Gaussian-blur sigma is 2."""
+    sets = [("gaussian_medium", "Gaussian blur"), ("defocus_medium", "defocus")]
+
+    def best_ours(setting):
+        vals = [metric(scene, setting, m) for m in ("ours_polyline", "ours_gauss")]
+        return max(v for v in vals if v is not None)
+
+    bars = [
+        ("vanilla 3DGS", lambda st: metric(scene, st, "vanilla"), COLOR["vanilla"]),
+        ("Wiener, guess sigma 1", lambda st: metric(scene, st, "wiener_guess_s1"), "#e3c9a6"),
+        ("Wiener, guess sigma 2", lambda st: metric(scene, st, "wiener_guess"), COLOR["wiener_guess"]),
+        ("Wiener, guess sigma 4", lambda st: metric(scene, st, "wiener_guess_s4"), "#8c5a2b"),
+        ("ours (blind)", best_ours, COLOR["ours_polyline"]),
+    ]
+    if any(f(st) is None for _, f, _ in bars for st, _ in sets):
+        return
+    fig, ax = plt.subplots(figsize=(7.5, 4.4))
+    width = 0.8 / len(bars)
+    for i, (label, f, color) in enumerate(bars):
+        ax.bar(np.arange(len(sets)) + i * width, [f(st) for st, _ in sets], width, color=color, label=label)
+    ax.set_xticks(np.arange(len(sets)) + 0.4 - width / 2)
+    ax.set_xticklabels([name for _, name in sets])
+    ax.set_ylim(21, 29.5)
+    ax.set_ylabel("PSNR (dB)")
+    ax.set_title(f"{scene}: classical deconvolution depends on guessing the kernel")
+    ax.legend(frameon=False, fontsize=8, ncol=2, loc="upper right")
+    plt.tight_layout()
+    plt.savefig(OUT / f"guess_sensitivity_{scene}.png", dpi=110)
+    plt.close()
+
+
 if __name__ == "__main__":
     for scene in ("bonsai", "counter", "garden"):
         qualitative(scene)
     severity()
+    severity(scene="counter")
+    guess_sensitivity()
     blur_types()
     spectra()
     kernels()

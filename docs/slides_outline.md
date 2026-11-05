@@ -11,8 +11,8 @@ Map to the professor's 6 expectations: (1) papers, (2) math, (3) from-scratch im
 | 5 | 2D warm-up | Single-image blind deconv collapses to the trivial solution (sharp = blurry, kernel = delta) | exp_2d_blind.png | 1 |
 | 6 | The 3D method | Joint optimisation of Gaussians + per-view kernels; test time: no kernel. Free-form kernel collapses; polyline prior (trajectory splatted into a kernel, centroid fixed) works. | kernels_bonsai_ours_polyline.png | 1.5 |
 | 7 | Main results | 3 scenes, vs vanilla / Wiener / RL (guessed kernel) / oracle upper bounds | results table + qualitative_* | 1.5 |
-| 8 | Analysis: severity, blur type, spectra | PSNR vs severity; polyline vs gaussian kernel across blur types; frequency recovery | severity_*, blur_types_*, spectrum_* | 1 |
-| 9 | Ablations | control points, kernel size, shared vs per-view, number of views; seed std | ablations_bonsai.png | 1 |
+| 8 | Severity, and what a wrong kernel guess costs | PSNR vs severity (gain grows with blur); Wiener with guess sigma 1/2/4 vs ours on Gaussian and defocus blur | severity_*, guess_sensitivity_* | 1 |
+| 9 | Ablations + frequency view | control points, kernel size, shared vs per-view, free-form + regularizers; power spectrum | ablations_bonsai.png, spectrum_* | 1 |
 | 10 | Takeaways + limits | Structured kernel prior makes joint estimation identifiable; limits: synthetic blur, per-view kernel is an approximation (blur really varies spatially/depth), single-seed scenes, free-form needs better priors. Future work. | none | 0.5 |
 
 ## Key numbers to quote (update from docs/results.md)

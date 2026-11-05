@@ -24,7 +24,7 @@ know the true kernel; the last two rows use it and are upper-bound references.
 |---|---|---|---|
 | Vanilla 3DGS on blurry photos | 26.42 | 25.40 | 23.18 |
 | Wiener deblur with a guessed kernel, then 3DGS | 26.82 | 25.46 | 22.86 |
-| RL deblur with a guessed kernel, then 3DGS | 26.84 | 25.56 | not run |
+| RL deblur with a guessed kernel, then 3DGS | 26.84 | 25.56 | 23.09 |
 | **Ours, polyline kernel (blind)** | **29.93** | **27.72** | **25.17** |
 | Ours with the true kernels | 30.40 | 27.96 | 25.27 |
 | Wiener deblur with the true kernel, then 3DGS | 30.99 | 28.19 | 25.76 |
@@ -56,6 +56,32 @@ Ablations on bonsai (medium motion blur):
 
 The method is insensitive to the polyline size, a per-photo kernel is essential, and the gain shrinks as photos get
 scarce, because the kernels are only identifiable when enough views must agree on one scene.
+
+### Defocus and Gaussian blur: a more mixed result
+
+Same scene (bonsai, medium severity). The Wiener baseline guesses an isotropic Gaussian kernel. The true kernel of the
+Gaussian-blur set is exactly a Gaussian with sigma 2, so a guess of sigma 2 is correct there, and it is a close match to
+the defocus disk. We therefore also ran deliberately wrong guesses (sigma 1 and 4).
+
+| Method | Gaussian blur | Defocus |
+|---|---|---|
+| Vanilla 3DGS | 26.24 | 26.70 |
+| Wiener, guess sigma 1 | 26.51 | 26.45 |
+| Wiener, guess sigma 2 (matches the truth) | 28.25 | 28.01 |
+| Wiener, guess sigma 4 | 23.46 | 22.43 |
+| Ours, polyline kernel (blind) | 27.29 | 27.54 |
+| Ours, Gaussian kernel (blind) | 27.21 | 27.25 |
+| Ours with the true kernels | 27.12 | 28.62 |
+
+- Our blind methods are about 1 dB above vanilla on these blurs, a smaller gain than on motion blur, and they do not beat
+  Wiener when Wiener is given the right kernel.
+- Classical deconvolution is fragile: a guess of sigma 4 lands 2.8 dB (Gaussian) and 4.3 dB (defocus) below vanilla.
+  Ours needs no guess, so it is the safer choice when the kernel is unknown.
+- The Gaussian kernel recovers the kernel better than the polyline (error 0.03 to 0.09 against 0.14 to 0.16) but does not
+  score higher, so kernel accuracy is not what limits PSNR on these blurs.
+- Even with the true kernel, the in-loop method (27.12) trails the Wiener pre-deblur (28.25) on Gaussian blur. A smooth
+  blur removes high frequencies, and an explicit inverse filter can amplify them on this noise-free synthetic data.
+- Adding sensor-like noise (sigma 0.02) did not change this on Gaussian blur: Wiener 28.05, ours 27.36, vanilla 26.33.
 
 ### Frequency view
 
@@ -107,8 +133,9 @@ tests/         unit tests
 
 ## Limitations
 - The blur is synthetic and global per photo. Real blur varies across the image and with depth.
-- Each blur type needs a prior that can represent it; the polyline prior is for motion blur.
-- Three scenes, three training seeds on one scene, no real blurry captures.
+- Each blur type needs a prior that can represent it. The polyline prior suits motion blur; on defocus and Gaussian
+  blur our gain is about 1 dB and a correctly guessed classical deconvolution is stronger.
+- Three scenes (the severity sweep covers two), three training seeds on one scene, no real blurry captures.
 
 ## References
 1. Kerbl et al., 3D Gaussian Splatting for Real-Time Radiance Field Rendering: https://arxiv.org/abs/2308.04079
