@@ -1,3 +1,4 @@
+# Same dependencies as pyproject.toml; `pip install -e ".[dev]"` installs these plus the package itself.
 numpy
 scipy
 scikit-image
@@ -7,6 +8,7 @@ imageio
 lpips
 pycolmap
 python-pptx
+pyyaml
 torch>=2.6
 gsplat
 pytest

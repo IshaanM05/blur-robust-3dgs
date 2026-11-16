@@ -2,7 +2,25 @@
 name = "blur3dgs"
 version = "0.1.0"
 description = "Blur-robust 3D Gaussian Splatting via joint per-view blur-kernel estimation"
+readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+    "scikit-image",
+    "matplotlib",
+    "pillow",
+    "imageio",
+    "lpips",
+    "pycolmap",
+    "python-pptx",
+    "pyyaml",
+    "torch>=2.6",
+    "gsplat",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
 
 [build-system]
 requires = ["setuptools>=61"]
@@ -10,3 +28,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

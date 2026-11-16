@@ -21,6 +21,10 @@ Heads-up for a fresh clone
 - The deck was only checked in LibreOffice, which substitutes the fonts (Cambria and Calibri). Open `docs/slides.pptx` in real PowerPoint or Google
   Slides and check every slide for text overflow before presenting.
 
+Update Nov 16: §3.2 and §5 are done and §3.4 is drafted (see each item). Everything else needs the data, a GPU, the raw
+`results/` folder or a person. Note that `results/` exists only on the machine that ran the experiments; `docs/results.md` is the
+only copy of the numbers in the repo.
+
 ## 1. Before submission (must do, no code)
 1. Add the teammate's name and roll number to the README (Team section).
 2. Read the five core papers listed in the README, then review `docs/slides.pptx`. The slide copy and speaker notes are drafts;
@@ -55,11 +59,13 @@ Setup: Python venv from `requirements.txt`, `export PYTHONPATH=$PWD/src`, Mip-Ne
 
 ## 3. Analysis and presentation (no GPU)
 1. A figure of kernel-recovery error against severity (the `kernel_l2` column in `results/all_results.csv`; add a function to `scripts/make_figures.py`).
-2. SSIM and LPIPS tables in the README next to PSNR (already in `docs/results.md`).
-3. A qualitative figure per blur type with the learned kernels next to the true ones.
-4. A short report (4 to 6 pages, PDF) in paper style: problem, method, experiments, analysis, limitations. Useful for the resume and for a
-   viva.
-5. A short demo video: a fly-through of held-out views, vanilla versus ours versus sharp, side by side.
+   Needs the raw `results/` folder (not in the repo).
+2. ~~SSIM and LPIPS tables in the README next to PSNR.~~ Done (Nov 16): both README tables now have an SSIM / LPIPS companion.
+3. A qualitative figure per blur type with the learned kernels next to the true ones. Needs `results/` (learned kernels) or new runs.
+4. A short report (4 to 6 pages, PDF) in paper style. **Drafted** (Nov 16) as [report.md](report.md); every number is from `results.md`.
+   Still to do: read it and put it in your own words, add the roll number for the second author, then convert to PDF
+   (for example `pandoc docs/report.md -o report.pdf --pdf-engine=xelatex`, or paste into Overleaf; the figures are linked, not embedded).
+5. A short demo video: a fly-through of held-out views, vanilla versus ours versus sharp, side by side. Needs data, a GPU and trained scenes.
 
 ## 4. Next level (research depth)
 Pick one or two; each is a real extension rather than more of the same.
@@ -77,8 +83,12 @@ Pick one or two; each is a real extension rather than more of the same.
    paper). It needs its own custom CUDA build and is the riskiest item; only attempt it with a spare day.
 6. **Few views.** The gain shrinks with fewer photos (255: +3.5 dB, 50: +2.4, 25: +1.3). A depth or smoothness prior on the kernels could help the sparse regime.
 
-## 5. Engineering polish (optional)
-- GitHub Actions workflow that runs `ruff check` and `pytest` on every push.
-- Make `pip install -e .` work in a clean environment (currently the project is used with `PYTHONPATH=src`).
-- A `Makefile` target for each of `run_all`, `figures`, `slides`, `test`.
-- Move the experiment configs from `scripts/run_matrix.py` to a YAML file.
+## 5. Engineering polish (done Nov 16, check on first push)
+- ~~GitHub Actions workflow that runs `ruff check` and `pytest` on every push.~~ `.github/workflows/ci.yml` (CPU torch). Written on a
+  machine without ruff or torch, so neither was run locally: watch the first CI run and fix anything it reports.
+- ~~Make `pip install -e .` work in a clean environment.~~ Dependencies are now in `pyproject.toml` (`pip install -e ".[dev]"`); the CI
+  test job installs this way, so it is the check.
+- ~~A `Makefile` target for each of `run_all`, `figures`, `slides`, `test`.~~ `make help` lists them. `tables`, `figures` and `slides`
+  refuse to run when `results/` is empty, so a fresh clone cannot overwrite `docs/results.md`.
+- ~~Move the experiment configs from `scripts/run_matrix.py` to a YAML file.~~ `configs/methods.yaml`; verified to produce exactly the
+  same 23 methods, arguments and default list as the old hard-coded dict. Adds `pyyaml` as a dependency.

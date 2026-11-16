@@ -3,6 +3,7 @@
 Usage: python scripts/run_matrix.py --combos bonsai:motion:medium counter:motion:medium --methods vanilla ...
 A combo is scene:kind:severity, optionally followed by :noise (e.g. bonsai:gaussian:medium:0.02).
 Results: results/<scene>/<kind>_<severity>/<method>/metrics.json, with the training log next to it as <method>.log.
+Methods are defined in configs/methods.yaml (pass --config to use another file).
 """
 
 import argparse
@@ -11,47 +12,33 @@ import sys
 import time
 from pathlib import Path
 
-BLURRED = ["--input", "blurred"]
-POLYLINE = BLURRED + ["--kernel", "polyline", "--poly_init_len", "6", "--kernel_start", "0", "--lr_kernel", "0.05"]
-FREE_FORM = BLURRED + ["--kernel", "free", "--lr_kernel", "0.1"]
-GAUSS = BLURRED + ["--kernel", "gauss", "--kernel_start", "0", "--lr_kernel", "0.02"]
+import yaml
+
+CONFIG = Path(__file__).resolve().parent.parent / "configs" / "methods.yaml"
 
 
-def deblur(method, kernel, guess_sigma=None):
-    """Pre-deblur baseline as (prepare_deblur step, train.py args). guess_sigma=None keeps the default guess (2.0)."""
-    name = f"{method}_{kernel}" + (f"_s{guess_sigma:g}" if guess_sigma else "")
-    return (method, kernel, guess_sigma), ["--input", f"deblur_{name}"]
+def load_methods(path=CONFIG):
+    """Read the method config. Returns ({name: (pre-deblur step or None, train.py args)}, default method list).
 
-
-# method name -> (pre-deblur step or None, train.py arguments)
-METHODS = {
-    "vanilla": (None, BLURRED),
-    "wiener_oracle": deblur("wiener", "oracle"),
-    "wiener_guess": deblur("wiener", "guess"),
-    "wiener_guess_s1": deblur("wiener", "guess", 1.0),
-    "wiener_guess_s4": deblur("wiener", "guess", 4.0),
-    "rl_oracle": deblur("rl", "oracle"),
-    "rl_guess": deblur("rl", "guess"),
-    "ours_polyline": (None, POLYLINE),
-    "ours_gauss": (None, GAUSS),
-    "ours_oracle_kernel": (None, BLURRED + ["--kernel", "oracle", "--kernel_start", "0"]),
-    # ablations of the polyline method
-    "abl_ctrl3": (None, POLYLINE + ["--n_ctrl", "3"]),
-    "abl_ctrl12": (None, POLYLINE + ["--n_ctrl", "12"]),
-    "abl_k15": (None, POLYLINE + ["--ksize", "15"]),
-    "abl_k35": (None, POLYLINE + ["--ksize", "35"]),
-    "abl_shared": (None, POLYLINE + ["--shared_kernel"]),
-    "abl_views100": (None, POLYLINE + ["--train_views", "100"]),
-    "abl_views50": (None, POLYLINE + ["--train_views", "50"]),
-    "abl_views25": (None, POLYLINE + ["--train_views", "25"]),
-    "vanilla_views50": (None, BLURRED + ["--train_views", "50"]),
-    "vanilla_views25": (None, BLURRED + ["--train_views", "25"]),
-    # free-form kernel with regularizers: does a better prior alone rescue it?
-    "abl_free_sparse": (None, FREE_FORM + ["--w_sparse", "0.01"]),
-    "abl_free_tv": (None, FREE_FORM + ["--w_tv", "0.05"]),
-    "abl_free_all": (None, FREE_FORM + ["--w_centroid", "1.0", "--w_sparse", "0.01", "--w_tv", "0.05"]),
-}
-DEFAULT = ["vanilla", "wiener_guess", "ours_polyline", "ours_oracle_kernel"]
+    A pre-deblur step is (method, kernel, guess_sigma); guess_sigma=None keeps the default guess (2.0).
+    """
+    cfg = yaml.safe_load(Path(path).read_text())
+    presets = cfg.get("presets", {})
+    methods = {}
+    for name, spec in cfg["methods"].items():
+        args = list(presets[spec["preset"]]) if "preset" in spec else []
+        args += spec.get("args", [])
+        prep = None
+        if "deblur" in spec:
+            d = spec["deblur"]
+            sigma = d.get("guess_sigma")
+            prep = (d["method"], d["kernel"], float(sigma) if sigma is not None else None)
+            args = ["--input", f"deblur_{d['method']}_{d['kernel']}" + (f"_s{sigma:g}" if sigma else "")] + args
+        methods[name] = (prep, [str(x) for x in args])
+    unknown = [m for m in cfg.get("default", []) if m not in methods]
+    if unknown:
+        raise ValueError(f"default lists unknown methods: {unknown}")
+    return methods, cfg.get("default", [])
 
 
 def run(cmd, log=None):
@@ -65,13 +52,19 @@ def run(cmd, log=None):
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--config", default=str(CONFIG), help="YAML file with the method definitions")
     p.add_argument("--combos", nargs="+", required=True)
-    p.add_argument("--methods", nargs="+", default=DEFAULT)
+    p.add_argument("--methods", nargs="+", help="method names from the config (default: its `default` list)")
     p.add_argument("--iters", type=int, default=10000)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--suffix", default="", help="appended to the results folder name (e.g. _seed1)")
     a = p.parse_args()
     py = sys.executable
+    methods, default = load_methods(a.config)
+    a.methods = a.methods or default
+    unknown = [m for m in a.methods if m not in methods]
+    if unknown:
+        p.error(f"unknown methods {unknown}; defined in {a.config}: {', '.join(methods)}")
 
     for combo in a.combos:
         scene, kind, sev, *noise = combo.split(":")
@@ -88,7 +81,7 @@ def main():
             if (out / "metrics.json").exists():
                 print("skip (done):", scene, tag, m, flush=True)
                 continue
-            prep, train_args = METHODS[m]
+            prep, train_args = methods[m]
             if prep:
                 method, kernel, sigma = prep
                 suffix = f"_s{sigma:g}" if sigma else ""

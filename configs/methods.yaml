@@ -1,0 +1,49 @@
+# Experiment methods for scripts/run_matrix.py.
+#
+# Each method trains with scripts/train.py. Its arguments are built as:
+#   preset arguments (if `preset` is given) + `args` (if given)
+# A method with `deblur` first runs scripts/prepare_deblur.py on the blurred photos and then trains on the
+# deblurred photos (`--input deblur_<method>_<kernel>[_s<sigma>]`); `guess_sigma` omitted keeps the default guess (2.0).
+# Numbers in argument lists are quoted so they reach train.py exactly as written.
+
+presets:
+  blurred: [--input, blurred]
+  polyline: [--input, blurred, --kernel, polyline, --poly_init_len, "6", --kernel_start, "0", --lr_kernel, "0.05"]
+  free_form: [--input, blurred, --kernel, free, --lr_kernel, "0.1"]
+  gauss: [--input, blurred, --kernel, gauss, --kernel_start, "0", --lr_kernel, "0.02"]
+
+# used when --methods is not given
+default: [vanilla, wiener_guess, ours_polyline, ours_oracle_kernel]
+
+methods:
+  vanilla: {preset: blurred}
+
+  # pre-deblur baselines: classical deconvolution, then vanilla 3DGS
+  wiener_oracle: {deblur: {method: wiener, kernel: oracle}}
+  wiener_guess: {deblur: {method: wiener, kernel: guess}}
+  wiener_guess_s1: {deblur: {method: wiener, kernel: guess, guess_sigma: 1.0}}
+  wiener_guess_s4: {deblur: {method: wiener, kernel: guess, guess_sigma: 4.0}}
+  rl_oracle: {deblur: {method: rl, kernel: oracle}}
+  rl_guess: {deblur: {method: rl, kernel: guess}}
+
+  # joint kernel estimation
+  ours_polyline: {preset: polyline}
+  ours_gauss: {preset: gauss}
+  ours_oracle_kernel: {preset: blurred, args: [--kernel, oracle, --kernel_start, "0"]}
+
+  # ablations of the polyline method
+  abl_ctrl3: {preset: polyline, args: [--n_ctrl, "3"]}
+  abl_ctrl12: {preset: polyline, args: [--n_ctrl, "12"]}
+  abl_k15: {preset: polyline, args: [--ksize, "15"]}
+  abl_k35: {preset: polyline, args: [--ksize, "35"]}
+  abl_shared: {preset: polyline, args: [--shared_kernel]}
+  abl_views100: {preset: polyline, args: [--train_views, "100"]}
+  abl_views50: {preset: polyline, args: [--train_views, "50"]}
+  abl_views25: {preset: polyline, args: [--train_views, "25"]}
+  vanilla_views50: {preset: blurred, args: [--train_views, "50"]}
+  vanilla_views25: {preset: blurred, args: [--train_views, "25"]}
+
+  # free-form kernel with regularizers: does a better prior alone rescue it?
+  abl_free_sparse: {preset: free_form, args: [--w_sparse, "0.01"]}
+  abl_free_tv: {preset: free_form, args: [--w_tv, "0.05"]}
+  abl_free_all: {preset: free_form, args: [--w_centroid, "1.0", --w_sparse, "0.01", --w_tv, "0.05"]}
