@@ -144,7 +144,7 @@ same settings for both) on the nine scenes we could download from its Google Dri
   not static, so neither method reconstructs it and ours adds speckle.
 
 This supports the method on real blur where the scene is static and well covered (`ball`, `basket`, `buick`, `heron`, `parterre`), but it is
-eight scenes judged visually, with a single global kernel per photograph, and it does not fix every scene.
+nine scenes judged visually, with a single global kernel per photograph, and it does not fix every scene.
 
 ### Frequency view
 
