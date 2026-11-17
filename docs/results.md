@@ -65,6 +65,7 @@
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
 |---|---|---|---|---|---|
 | wiener_oracle | 30.99 | 0.938 | 0.075 | - | 1253450 |
+| sharp_input | 30.88 | 0.930 | 0.083 | - | 1260028 |
 | ours_oracle_kernel | 30.40 | 0.920 | 0.093 | 0.000 | 816234 |
 | abl_ctrl12 | 30.11 | 0.912 | 0.105 | 0.138 | 782644 |
 | abl_k35 | 30.08 | 0.911 | 0.109 | 0.151 | 787899 |
@@ -88,6 +89,21 @@
 | abl_views25 | 23.64 | 0.815 | 0.173 | 0.082 | 586212 |
 | vanilla_views25 | 22.32 | 0.692 | 0.326 | - | 583855 |
 
+## bonsai / motion_medium_b1
+
+| method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
+|---|---|---|---|---|---|
+| ours_polyline | 29.98 | 0.909 | 0.110 | 0.146 | 775123 |
+| wiener_guess | 26.60 | 0.808 | 0.224 | - | 1668524 |
+| vanilla | 26.28 | 0.763 | 0.352 | - | 781454 |
+
+## bonsai / motion_medium_b2
+
+| method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
+|---|---|---|---|---|---|
+| wiener_guess | 26.61 | 0.811 | 0.225 | - | 1684806 |
+| vanilla | 26.28 | 0.765 | 0.350 | - | 775368 |
+
 ## bonsai / motion_medium_seed1
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
@@ -103,6 +119,12 @@
 | ours_polyline | 30.09 | 0.911 | 0.110 | 0.148 | 799225 |
 | wiener_guess | 26.70 | 0.818 | 0.223 | - | 1681267 |
 | vanilla | 26.35 | 0.767 | 0.349 | - | 794284 |
+
+## counter / defocus_medium
+
+| method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
+|---|---|---|---|---|---|
+| vanilla | 25.72 | 0.760 | 0.355 | - | 484412 |
 
 ## counter / motion_high
 
@@ -128,6 +150,7 @@
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
 |---|---|---|---|---|---|
+| sharp_input | 28.45 | 0.905 | 0.104 | - | 941339 |
 | wiener_oracle | 28.19 | 0.894 | 0.112 | - | 931120 |
 | ours_oracle_kernel | 27.96 | 0.870 | 0.128 | 0.000 | 539826 |
 | ours_polyline | 27.72 | 0.859 | 0.148 | 0.145 | 508855 |
@@ -139,6 +162,7 @@
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
 |---|---|---|---|---|---|
+| sharp_input | 26.25 | 0.835 | 0.120 | - | 3302953 |
 | wiener_oracle | 25.76 | 0.814 | 0.148 | - | 3067872 |
 | ours_oracle_kernel | 25.27 | 0.731 | 0.250 | 0.000 | 1204418 |
 | ours_polyline | 25.17 | 0.712 | 0.283 | 0.129 | 1140521 |

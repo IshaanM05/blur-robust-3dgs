@@ -34,6 +34,17 @@ def _pose(img):
     return m
 
 
+def _find_image(img_dir: Path, name: str) -> Path:
+    """The file for a COLMAP image name. Some datasets list `.jpg` in COLMAP but ship `.png` in the resized folders."""
+    path = img_dir / name
+    if path.exists():
+        return path
+    matches = sorted(img_dir.glob(Path(name).stem + ".*"))
+    if not matches:
+        raise FileNotFoundError(f"no image for {name} in {img_dir}")
+    return matches[0]
+
+
 def load_scene(root: str | Path, factor: int = 4, test_every: int = 8, max_views: int | None = None) -> Scene:
     import pycolmap
 
@@ -51,7 +62,7 @@ def load_scene(root: str | Path, factor: int = 4, test_every: int = 8, max_views
             raise ValueError(f"camera model {model} not supported (need undistorted pinhole images)")
         p = np.asarray(cam.params, dtype=np.float64)
         fx, fy, cx, cy = (p[0], p[0], p[1], p[2]) if model == "SIMPLE_PINHOLE" else (p[0], p[1], p[2], p[3])
-        pic = imageio.imread(img_dir / im.name)[..., :3]
+        pic = imageio.imread(_find_image(img_dir, im.name))[..., :3]
         s = pic.shape[1] / cam.width
         names.append(im.name)
         images.append(pic)

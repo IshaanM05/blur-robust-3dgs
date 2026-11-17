@@ -3,6 +3,23 @@
 Last updated: 2026-11-05. **Deadline: Nov 6.** All experiments are finished (85 runs, no failures). Full tables: [results.md](results.md).
 Figures: [figures/](figures/). Talk outline: [slides_outline.md](slides_outline.md). Draft deck: `slides.pptx` (rebuild with `scripts/build_slides.py`).
 
+## Nov 17 round: paused 15:15 IST, safe to resume
+Extra experiments ran this afternoon (`scripts/run_final.sh`). Finished so far: the sharp-input ceiling on all three scenes, two extra random blur
+realisations on bonsai (`motion_medium_b1`, `_b2`), and part of the counter defocus / Gaussian set. Everything finished is kept; see `docs/results.md`.
+
+To continue (all resumable, finished runs are skipped):
+```bash
+scripts/resume.sh        # checks the cached files for damage, then restarts the rest of the queue
+```
+What the queue still has: remaining counter defocus / Gaussian runs, the noise sweep (0.05 and 0.1) on Gaussian blur, 30k-iteration runs on
+bonsai, `rl_guess` on counter low and high, and the polyline run for blur realisation 2. To pause safely again: `scripts/pause.sh`.
+
+**Real blurry scenes (Deblur-NeRF).** `scripts/download_deblurnerf.py` fetches only `images_4`, `sparse`, `poses_bounds.npy` and the holdout file
+per scene. Downloaded: `blurball` (27 photos) and `blurbasket` (45). Google Drive then rate limited the downloads, so the other eight scenes are
+missing; run the script again later (it skips what is on disk and stops cleanly if Drive is still limiting). `scripts/run_real.sh` then trains vanilla
+and ours on every scene that loads and writes held-out renders to `results/real_scenes/` (qualitative only, there is no sharp ground truth);
+`blurball` vanilla has finished, `ours` has not. The loader now accepts scenes whose COLMAP file names are `.jpg` but whose folders hold `.png`.
+
 ## Done
 - Pipeline, baselines, three kernel estimators, main table (3 scenes), severity sweeps (bonsai, counter), blur types, ablations, free-form regularizers,
   3 training seeds, wrong-guess Wiener and noisy-input checks. Findings are written up in the README.
