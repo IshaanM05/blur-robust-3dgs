@@ -14,7 +14,7 @@ BAD-Gaussians: model each photograph as the sharp rendering convolved with an un
 and the kernels jointly. Our question is when this joint estimation works and why. On three Mip-NeRF 360 scenes with synthetic motion blur, a
 low-dimensional *polyline* kernel recovers the true kernels and comes within 0.1 to 0.5 dB PSNR of training with the true
 kernels, 2 to 3.5 dB above every blind baseline. A free-form kernel, by contrast, collapses to a delta in every setting we tried,
-which is the trivial solution of blind deconvolution. On defocus and Gaussian blur the gain is about 1 dB, and classical Wiener
+which is the trivial solution of blind deconvolution. On defocus and Gaussian blur the gain is 0.5 to 1 dB, and classical Wiener
 deconvolution with a correctly guessed kernel is stronger in PSNR, although a wrong guess puts it 2.8 to 4.3 dB *below* doing nothing.
 
 ## 1. Introduction
@@ -85,7 +85,7 @@ All kernels are 25 x 25 pixels, non-negative and sum to one.
 ### 3.3 Baselines
 
 - **Vanilla 3DGS** trained directly on the blurred photographs.
-- **Pre-deblur + 3DGS:** each photograph is deblurred with Wiener deconvolution ($\hat X = \bar H Y / (|H|^2 + \mathrm{NSR})$, NSR = 0.01)
+- **Pre-deblur + 3DGS:** each photograph is deblurred with Wiener deconvolution ($\hat X = \bar H Y / (|H|^2 + \mathrm{NSR})$, NSR = 0.01 for the guessed kernel and 0.001 for the true kernel)
   or Richardson-Lucy (30 iterations), then vanilla 3DGS is trained on the result. The *blind* variant uses a guessed isotropic Gaussian
   kernel (sigma 2 pixels unless stated); the *oracle* variant uses the true kernel and is a reference, not a fair competitor.
 
@@ -111,7 +111,7 @@ true kernel, minimised over integer shifts of up to 3 pixels (a kernel is only i
 delta kernel scores about 0.99 against the medium motion kernels.
 
 **Implementation.** The blur simulator, Wiener and Richardson-Lucy baselines, kernel modules, training loop, metrics and a 2D
-Gaussian-image fitter are our own code; gsplat provides the 3D rasteriser and densification. 18 unit tests cover the core
+Gaussian-image fitter are our own code; gsplat provides the 3D rasteriser and densification. 20 unit tests cover the core
 operations. Runs took 4 to 7 minutes on bonsai and 10 to 15 minutes on garden on one 12 GB laptop GPU; 85 runs in total.
 
 ## 5. Results
@@ -157,12 +157,12 @@ and the edges that vanilla 3DGS blurs (figure: [qualitative_bonsai_motion_medium
 
 Wiener deconvolution with the *true* kernel is the strongest entry. It uses information a blind method does not have, so we report it
 as a reference rather than a competitor. It is also above our own true-kernel run, which suggests that the in-loop formulation loses
-some detail that an explicit inverse filter recovers on this noise-free data (see Section 5.5).
+some detail that an explicit inverse filter recovers on this noise-free data (see Section 5.4).
 
 **Severity.** The gain over vanilla grows with blur strength: +2.0, +3.5 and +4.5 dB on bonsai at low, medium and high severity, and
 +1.0, +2.3 and +3.2 dB on counter (figures: [severity_bonsai_motion.png](figures/severity_bonsai_motion.png),
 [severity_counter_motion.png](figures/severity_counter_motion.png)). At low severity on bonsai the guessed-kernel Wiener baseline (25.20) is
-3.3 dB *below* vanilla (28.49): deconvolving with a kernel larger than the true one does more harm than the blur.
+3.3 dB *below* vanilla (28.49): a plausible reason is that deconvolving with a kernel larger than the true one does more harm than the blur (we did not test this).
 
 **Frequency view.** The radial power spectrum of a rendered test view shows vanilla 3DGS losing the high frequencies removed by the blur,
 while our estimate recovers most of them and tracks the true-kernel run (figure: [spectrum_bonsai_motion_medium.png](figures/spectrum_bonsai_motion_medium.png)).
@@ -213,8 +213,8 @@ and is close to the defocus disk, so we also ran deliberately wrong guesses.
 | Ours, Gaussian kernel | 27.21 | 27.25 | 0.815 / 0.213 | 0.806 / 0.194 |
 | Ours with the true kernels | 27.12 | 28.62 | 0.820 / 0.192 | 0.872 / 0.148 |
 
-Here the picture is less favourable. Both blind variants are about 1 dB above vanilla, and a correctly guessed Wiener deconvolution is about
-1 dB above them in PSNR and SSIM. The perceptual metric disagrees: the Gaussian kernel has a better LPIPS than the correct Wiener guess on both
+Here the picture is less favourable. Both blind variants are 0.5 to 1.1 dB above vanilla, and a correctly guessed Wiener deconvolution is 0.5 to
+1.0 dB above them in PSNR and SSIM. The perceptual metric disagrees: the Gaussian kernel has a better LPIPS than the correct Wiener guess on both
 blurs (0.213 against 0.242, and 0.194 against 0.232). Classical deconvolution is also fragile: a guess of sigma 4 lands 2.8 dB (Gaussian blur)
 and 4.3 dB (defocus) below vanilla, while our methods need no guess (figure: [guess_sensitivity_bonsai.png](figures/guess_sensitivity_bonsai.png)).
 
@@ -236,7 +236,7 @@ content along the direction perpendicular to the motion, which may be why the in
 - **Synthetic, global blur.** Every kernel is uniform over the photograph. Real camera shake produces spatially varying blur, and defocus
   depends on depth. We have not evaluated on real blurry captures.
 - **The prior must match the blur.** The polyline suits motion and the Gaussian suits defocus; the user must know which to use. On defocus and
-  Gaussian blur our gain is about 1 dB and a correctly guessed classical deconvolution is stronger in PSNR.
+  Gaussian blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger in PSNR.
 - **Limited breadth.** Three scenes for the main table, two for the severity sweep, one for the blur-type, ablation and seed studies. Defocus
   and Gaussian kernels are identical across photographs. The seed study varies the optimiser seed, not the blur realisation. All runs stop at
   10,000 iterations.

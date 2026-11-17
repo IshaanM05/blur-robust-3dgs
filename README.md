@@ -97,7 +97,7 @@ SSIM / LPIPS for the same runs:
 | Ours, Gaussian kernel (blind) | 0.815 / 0.213 | 0.806 / 0.194 |
 | Ours with the true kernels | 0.820 / 0.192 | 0.872 / 0.148 |
 
-- Our blind methods are about 1 dB above vanilla on these blurs, a smaller gain than on motion blur, and they do not beat
+- Our blind methods are 0.5 to 1 dB above vanilla on these blurs, a smaller gain than on motion blur, and they do not beat
   Wiener when Wiener is given the right kernel.
 - Classical deconvolution is fragile: a guess of sigma 4 lands 2.8 dB (Gaussian) and 4.3 dB (defocus) below vanilla.
   Ours needs no guess, so it is the safer choice when the kernel is unknown.
@@ -165,7 +165,7 @@ Open work and ideas for extending the project: [docs/NEXT_STEPS.md](docs/NEXT_ST
 ## Limitations
 - The blur is synthetic and global per photo. Real blur varies across the image and with depth.
 - Each blur type needs a prior that can represent it. The polyline prior suits motion blur; on defocus and Gaussian
-  blur our gain is about 1 dB and a correctly guessed classical deconvolution is stronger.
+  blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger.
 - Three scenes (the severity sweep covers two), three training seeds on one scene, no real blurry captures.
 
 ## References

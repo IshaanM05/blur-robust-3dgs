@@ -558,7 +558,7 @@ notes(
     "1.5 min. Left: the benefit over vanilla grows with severity because there is more blur to remove. Right: be "
     "upfront. On Gaussian and defocus blur, Wiener with the right kernel guess beats us, but that guess was handed to "
     "it; the true Gaussian blur has sigma 2. Change the guess to 1 or 4 and it collapses, down to below vanilla. Our "
-    "blind estimate is about 1 dB above vanilla regardless. Classical deconvolution is the better tool only if you "
+    "blind estimate is 0.5 to 1 dB above vanilla regardless. Classical deconvolution is the better tool only if you "
     "know the kernel.",
 )
 

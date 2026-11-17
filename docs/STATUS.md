@@ -7,7 +7,7 @@ Figures: [figures/](figures/). Talk outline: [slides_outline.md](slides_outline.
 - Pipeline, baselines, three kernel estimators, main table (3 scenes), severity sweeps (bonsai, counter), blur types, ablations, free-form regularizers,
   3 training seeds, wrong-guess Wiener and noisy-input checks. Findings are written up in the README.
 - Headline: on motion blur the polyline prior is within 0.1 to 0.5 dB of true-kernel results and 2 to 3.5 dB above blind baselines; on defocus and
-  Gaussian blur our gain is about 1 dB and a correctly guessed Wiener is stronger, but a wrong guess drops it 2.8 to 4.3 dB below vanilla.
+  Gaussian blur our gain is 0.5 to 1 dB and a correctly guessed Wiener is stronger, but a wrong guess drops it 2.8 to 4.3 dB below vanilla.
 
 Nov 16: added SSIM/LPIPS tables to the README, a draft paper-style report ([report.md](report.md)), CI, `pip install -e .`
 support, a Makefile and `configs/methods.yaml`. The up-to-date to-do list is [NEXT_STEPS.md](NEXT_STEPS.md).
