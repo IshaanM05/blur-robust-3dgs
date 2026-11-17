@@ -713,10 +713,6 @@ text(
     0.9,
     [
         ("Code, results, report: github.com/IshaanM05/blur-robust-3dgs", {"size": 16, "bold": True, "color": NAVY}),
-        (
-            "Implemented from scratch: training loop, kernel models, losses, baselines, metrics. Rasteriser: gsplat.",
-            {"size": 14, "color": GRAY},
-        ),
     ],
 )
 notes(
