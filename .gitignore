@@ -18,3 +18,4 @@ results/*
 *.zip
 wandb/
 runs/
+submission/
