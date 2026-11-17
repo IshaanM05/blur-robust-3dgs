@@ -248,12 +248,115 @@ def guess_sensitivity(scene="bonsai"):
     plt.close()
 
 
+def kernel_recovery_vs_severity(scenes=("bonsai", "counter")):
+    """Kernel error of the polyline estimate against severity, next to what a delta kernel (no blur estimate) scores."""
+    from blur3dgs.analysis.kernel_recovery import best_shift_l2
+
+    sev = ["low", "medium", "high"]
+    delta = np.zeros((25, 25))
+    delta[12, 12] = 1
+    fig, ax = plt.subplots(1, len(scenes), figsize=(5.2 * len(scenes), 4), sharey=True)
+    ax = np.atleast_1d(ax)
+    drawn = False
+    for a, scene in zip(ax, scenes, strict=False):
+        learned = [metric(scene, f"motion_{s}", "ours_polyline", "kernel_best_shift_l2") for s in sev]
+        if any(v is None for v in learned):
+            continue
+        drawn = True
+        no_est = [
+            np.mean([best_shift_l2(delta, k) for k in np.load(f"data/blurred/{scene}/motion_{s}/kernels.npy")])
+            for s in sev
+        ]
+        a.plot(sev, no_est, "o--", color=COLOR["vanilla"], lw=2, label="delta kernel (no blur estimate)")
+        a.plot(sev, learned, "o-", color=COLOR["ours_polyline"], lw=2, label="ours: polyline")
+        a.set_title(f"{scene}, motion blur")
+        a.set_xlabel("blur severity")
+    if not drawn:
+        plt.close()
+        return
+    ax[0].set_ylabel("kernel error (L2, best shift)")
+    ax[0].legend(frameon=False, fontsize=8)
+    plt.tight_layout()
+    plt.savefig(OUT / "kernel_recovery_vs_severity.png", dpi=110)
+    plt.close()
+
+
+def blur_realisations(scene="bonsai", methods=("vanilla", "wiener_guess", "ours_polyline")):
+    """Mean and std of PSNR over the original blur and the extra random blur realisations (_b1, _b2)."""
+    settings = ["motion_medium", "motion_medium_b1", "motion_medium_b2"]
+    stats = {}
+    for m in methods:
+        v = [metric(scene, s, m) for s in settings]
+        v = [x for x in v if x is not None]
+        if len(v) > 1:
+            stats[m] = (np.mean(v), np.std(v, ddof=1), v)
+    if not stats:
+        return
+    print("random blur realisations (different kernels and blurred photos):")
+    for m, (mu, sd, v) in stats.items():
+        print(f"  {m:14s} n={len(v)} mean {mu:.2f} std {sd:.2f}  {np.round(v, 2)}")
+    fig, ax = plt.subplots(figsize=(5.2, 4))
+    for i, (m, (mu, sd, _)) in enumerate(stats.items()):
+        ax.bar(i, mu, yerr=sd, color=COLOR[m], capsize=5)
+    ax.set_xticks(range(len(stats)))
+    ax.set_xticklabels([LABEL[m] for m in stats], rotation=15, fontsize=8)
+    ax.set_ylim(min(s[0] for s in stats.values()) - 2, None)
+    ax.set_ylabel("PSNR (dB), mean +- std over blurs")
+    ax.set_title(f"{scene}, medium motion blur")
+    plt.tight_layout()
+    plt.savefig(OUT / f"blur_realisations_{scene}.png", dpi=110)
+    plt.close()
+
+
+def noise_sweep(scene="bonsai", methods=("vanilla", "wiener_guess", "ours_gauss", "ours_oracle_kernel")):
+    """PSNR on Gaussian blur as noise is added to the blurry photographs."""
+    levels = [
+        ("gaussian_medium", 0.0),
+        ("gaussian_medium_n0.02", 0.02),
+        ("gaussian_medium_n0.05", 0.05),
+        ("gaussian_medium_n0.1", 0.1),
+    ]
+    fig, ax = plt.subplots(figsize=(6, 4))
+    drawn = False
+    for m in methods:
+        pts = [(sig, metric(scene, st, m)) for st, sig in levels]
+        pts = [(x, y) for x, y in pts if y is not None]
+        if len(pts) >= 3:
+            drawn = True
+            ax.plot(*zip(*pts, strict=False), "o-", color=COLOR[m], lw=2, label=LABEL[m])
+    if not drawn:
+        plt.close()
+        return
+    ax.set_xlabel("noise standard deviation added to the blurry photographs")
+    ax.set_ylabel("PSNR (dB)")
+    ax.set_title(f"{scene}, Gaussian blur, medium")
+    ax.legend(frameon=False, fontsize=8)
+    plt.tight_layout()
+    plt.savefig(OUT / f"noise_sweep_{scene}.png", dpi=110)
+    plt.close()
+
+
+def longer_training(scene="bonsai", methods=("vanilla", "wiener_guess", "ours_polyline")):
+    """10k against 30k iterations (printed; the conclusion is whether the ordering and the gaps change)."""
+    rows = [(m, metric(scene, "motion_medium", m), metric(scene, "motion_medium_30k", m)) for m in methods]
+    rows = [r for r in rows if r[1] is not None and r[2] is not None]
+    if rows:
+        print("10k vs 30k iterations (bonsai, medium motion blur, PSNR):")
+        for m, a, b in rows:
+            print(f"  {m:14s} {a:.2f} -> {b:.2f}")
+
+
 if __name__ == "__main__":
     for scene in ("bonsai", "counter", "garden"):
         qualitative(scene)
     severity()
     severity(scene="counter")
     guess_sensitivity()
+    guess_sensitivity(scene="counter")
+    kernel_recovery_vs_severity()
+    blur_realisations()
+    noise_sweep()
+    longer_training()
     blur_types()
     spectra()
     kernels()
