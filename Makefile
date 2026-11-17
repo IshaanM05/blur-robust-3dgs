@@ -3,7 +3,7 @@
 PYTHON ?= python
 export PYTHONPATH := $(CURDIR)/src$(if $(PYTHONPATH),:$(PYTHONPATH))
 
-.PHONY: help install test lint format run_all run_extras tables figures slides rebuild
+.PHONY: help install test lint format run_all run_extras tables figures slides report rebuild package
 
 help:
 	@echo "install     pip install -e .[dev]"
@@ -15,7 +15,9 @@ help:
 	@echo "tables      rebuild docs/results.md from results/"
 	@echo "figures     rebuild docs/figures from results/"
 	@echo "slides      rebuild docs/slides.pptx"
-	@echo "rebuild     tables, figures and slides"
+	@echo "report      rebuild docs/report.pdf from docs/report.md"
+	@echo "rebuild     tables, figures, slides and the report PDF"
+	@echo "package     build the Moodle bundle (needs everything committed)"
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -49,4 +51,10 @@ figures: tables
 slides: tables
 	$(PYTHON) scripts/build_slides.py
 
-rebuild: figures slides
+report:
+	$(PYTHON) scripts/build_report_pdf.py
+
+rebuild: figures slides report
+
+package:
+	scripts/package_submission.sh
