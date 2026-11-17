@@ -18,6 +18,9 @@ default: [vanilla, wiener_guess, ours_polyline, ours_oracle_kernel]
 methods:
   vanilla: {preset: blurred}
 
+  # training on the sharp photographs: the ceiling for every blurred setting of the same scene
+  sharp_input: {args: [--input, clean]}
+
   # pre-deblur baselines: classical deconvolution, then vanilla 3DGS
   wiener_oracle: {deblur: {method: wiener, kernel: oracle}}
   wiener_guess: {deblur: {method: wiener, kernel: guess}}

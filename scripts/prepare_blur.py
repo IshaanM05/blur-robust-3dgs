@@ -1,6 +1,8 @@
 """Create blurred training views (+ ground-truth kernels) for one scene and cache them.
 Usage: python scripts/prepare_blur.py --scene bonsai --kind motion --severity medium [--shared]
-Output: data/blurred/<scene>/<kind>_<severity>[_shared]/{blurred.npy (uint8), kernels.npy}
+Output: data/blurred/<scene>/<kind>_<severity>[_shared][_n<noise>][_b<seed>]/{blurred.npy (uint8), kernels.npy}
+A non-zero --seed is a different random blur realisation and gets its own folder. An existing cache is never
+overwritten unless --overwrite is given.
 """
 
 import argparse
@@ -20,12 +22,16 @@ p.add_argument("--seed", type=int, default=0)
 p.add_argument("--shared", action="store_true")
 p.add_argument("--noise", type=float, default=0.0)
 p.add_argument("--max_views", type=int, default=None)
+p.add_argument("--overwrite", action="store_true")
 a = p.parse_args()
+tag = f"{a.kind}_{a.severity}" + ("_shared" if a.shared else "") + (f"_n{a.noise}" if a.noise else "")
+tag += f"_b{a.seed}" if a.seed else ""
+out = Path("data/blurred") / a.scene / tag
+if (out / "blurred.npy").exists() and not a.overwrite:
+    raise SystemExit(f"{out} already exists; not overwriting (use --overwrite to replace it)")
 sc = load_scene(Path(a.root) / a.scene, max_views=a.max_views)
 clean = sc.images[sc.train_idx].astype(np.float32) / 255
 blurred, kernels = blur_views(clean, a.kind, a.severity, a.seed, noise_sigma=a.noise, per_view=not a.shared)
-tag = f"{a.kind}_{a.severity}" + ("_shared" if a.shared else "") + (f"_n{a.noise}" if a.noise else "")
-out = Path("data/blurred") / a.scene / tag
 out.mkdir(parents=True, exist_ok=True)
 np.save(out / "blurred.npy", (blurred * 255 + 0.5).astype(np.uint8))
 np.save(out / "kernels.npy", kernels)
