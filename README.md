@@ -11,6 +11,8 @@ restoration problem: each photo is the sharp rendering convolved with an unknown
 and we optimise the Gaussians `G` and the kernels `k_i` together. The kernel is dropped at test time, so the scene is
 rendered sharp. The question we study is **when joint estimation works, and why**.
 
+Download everything (code, report, slides, results tables) as one archive: [blur-robust-3dgs-submission.zip](https://github.com/IshaanM05/blur-robust-3dgs/releases/download/v1.0/blur-robust-3dgs-submission.zip)
+
 ## Team
 - Ishaan Mondal (24B2118)
 - Purvanya Tyagi (24B0385), [@purvanyaTyagi](https://github.com/purvanyaTyagi)
