@@ -381,13 +381,14 @@ def real_scenes(root="data/deblurnerf"):
         plt.close()
 
 
-def real_summary(root="data/deblurnerf", view=0):
-    """One zoomed crop per real scene: blurry photo, vanilla 3DGS, ours. Used on the slides."""
+def real_summary(root="data/deblurnerf", view=0, only=None, name="real_summary.png"):
+    """One zoomed crop per real scene: blurry photo, vanilla 3DGS, ours. `only` restricts it to some scenes."""
     scenes = sorted(
         d.name[: -len("_ours")]
         for d in Path("results/real_scenes").glob("*_ours")
         if (d / "metrics.json").exists()
         and (R / "real_scenes" / (d.name[: -len("_ours")] + "_vanilla") / "metrics.json").exists()
+        and (only is None or d.name[: -len("_ours")] in only)
     )
     if not scenes:
         return
@@ -418,7 +419,7 @@ def real_summary(root="data/deblurnerf", view=0):
             fontsize=11,
         )
     plt.tight_layout()
-    plt.savefig(OUT / "real_summary.png", dpi=100)
+    plt.savefig(OUT / name, dpi=100)
     plt.close()
 
 
@@ -435,6 +436,7 @@ if __name__ == "__main__":
     longer_training()
     real_scenes()
     real_summary()
+    real_summary(only=("blurball", "blurbuick", "blurparterre", "blurgirl"), name="real_slide.png")
     blur_types()
     spectra()
     kernels()

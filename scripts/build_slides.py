@@ -483,7 +483,7 @@ notes(
 # ---------------------------------------------------------------- 8 real photographs
 s = new_slide()
 title(s, "Real blurry photographs")
-real_fig = FIG / "real_summary.png"
+real_fig = FIG / "real_slide.png"
 if real_fig.exists():
     w_, h_ = picture(s, real_fig, 0.6, 1.4, 7.4, 5.4, center=False)
 text(
@@ -493,7 +493,7 @@ text(
     4.4,
     4.8,
     [
-        ("Deblur-NeRF camera-motion captures, no sharp ground truth, judged by eye.", {"space_after": 12}),
+        ("Deblur-NeRF camera-motion captures, 8 scenes, no sharp ground truth, judged by eye.", {"space_after": 12}),
         (
             "Vanilla 3DGS is blurrier than the held-out photographs: it averages the blur of its training photographs.",
             {"space_after": 12},
@@ -502,7 +502,10 @@ text(
             "Ours recovers leaf edges, weave and wires at the sharpness of the photographs, and more on the softest one.",
             {"space_after": 12},
         ),
-        ("Artefacts: speckled over-sharpening on bright edges (the chrome headlight).", {"color": RUST, "bold": True}),
+        (
+            "Artefacts and a failure: speckle on bright edges, and the moving subject (third row) is not reconstructed by either method.",
+            {"color": RUST, "bold": True},
+        ),
     ],
     size=15,
 )
@@ -511,7 +514,7 @@ notes(
     s,
     "1 min. This is the real-data check. There is no ground truth, so say plainly that it is qualitative. Point at the "
     "middle column: vanilla loses the detail the photographs contain. Right column: ours recovers it. Then point at the "
-    "headlight in the last row and name the artefact before anyone else does.",
+    "third row, the girl: a moving subject with six photos, where both methods fail. Name it before anyone else does. All eight scenes are in the report appendix.",
 )
 
 # ---------------------------------------------------------------- 9 severity + blur types

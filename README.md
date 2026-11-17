@@ -108,21 +108,37 @@ SSIM / LPIPS for the same runs:
   score higher, so kernel accuracy is not what limits PSNR on these blurs.
 - Even with the true kernel, the in-loop method (27.12) trails the Wiener pre-deblur (28.25) on Gaussian blur. A smooth
   blur removes high frequencies, and an explicit inverse filter can amplify them on this noise-free synthetic data.
-- Adding sensor-like noise (sigma 0.02) did not change this on Gaussian blur: Wiener 28.05, ours 27.36, vanilla 26.33.
+- The same pattern holds on a second scene. On `counter` (Gaussian blur, medium) vanilla gets 25.32, ours with the Gaussian kernel
+  26.17, ours with the polyline 26.04, the true kernels 26.56 and correctly guessed Wiener 26.68; a wrong guess (sigma 4) drops Wiener to 22.59.
+- Noise sweep on `bonsai` (Gaussian blur, medium), PSNR:
+
+  | Noise sigma | Vanilla | Wiener (correct guess) | Ours, Gaussian kernel | Ours, true kernels |
+  |---|---|---|---|---|
+  | 0 | 26.24 | 28.25 | 27.21 | 27.12 |
+  | 0.02 | 26.33 | 28.05 | 27.36 | 26.76 |
+  | 0.05 | 26.36 | 26.59 | 26.62 | 24.95 |
+  | 0.1 | 25.67 | 23.84 | 25.67 | 22.93 |
+
+  Wiener's advantage disappears by sigma 0.05 and reverses at 0.1, where it falls 1.8 dB below vanilla. Ours stays at or above vanilla but
+  its gain also vanishes at 0.1. Giving the in-loop method the true kernel is worse than estimating a Gaussian under noise, so a
+  kernel that is exact for the clean image is not the best one for the noisy data.
 
 ### Real blurry photographs (qualitative)
 
 Deblur-NeRF also provides real camera-motion-blur captures. We trained vanilla 3DGS and the polyline method (7,000 iterations,
-same settings for both) on the scenes we could download from its Google Drive: `blurball`, `blurbasket` and `blurbuick` (25 to 45
-photographs each). There is no sharp ground truth, so this is judged by eye on held-out photographs
+same settings for both) on the eight scenes we could download from its Google Drive: `blurball`, `blurbasket`, `blurbuick`,
+`blurcoffee`, `blurdecoration`, `blurgirl`, `blurheron` and `blurparterre`. There is no sharp ground truth, so this is judged by eye on held-out photographs
 ([docs/figures/real_summary.png](docs/figures/real_summary.png), per-scene figures `docs/figures/real_<scene>.png`):
 
 - Vanilla 3DGS renders are clearly blurrier than the held-out photographs: it averages the blur of its training photographs.
 - Our renders recover the fine detail (leaf edges and the weave of the ball in `blurball`, the basket wires in `blurbasket`) at a sharpness
   comparable to the photographs, and on `blurbuick`, where the held-out photograph is itself soft, sharper than it.
-- There are artefacts: on `blurbuick` bright, high-contrast edges such as the chrome headlight strip show speckled over-sharpening.
+- There are artefacts: on `blurbuick` bright, high-contrast edges such as the chrome headlight strip show speckled over-sharpening, and
+  `blurcoffee` and `blurdecoration` show dark or streaked patches. `blurgirl` (only six photographs, a moving subject) fails: the person is
+  not static, so neither method reconstructs it and ours adds speckle.
 
-This supports the method on real blur, but it is three scenes judged visually, with a single global kernel per photograph.
+This supports the method on real blur where the scene is static and well covered (`ball`, `basket`, `buick`, `heron`, `parterre`), but it is
+eight scenes judged visually, with a single global kernel per photograph, and it does not fix every scene.
 
 ### Frequency view
 

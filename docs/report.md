@@ -223,8 +223,21 @@ Two further observations:
 - **Kernel accuracy is not the bottleneck here.** The Gaussian kernel recovers the true kernel better than the polyline (error 0.03 to 0.09
   against 0.14 to 0.16) but does not score higher in PSNR. On Gaussian blur, even the true kernels in the loop (27.12) trail the correct Wiener
   pre-deblur (28.25).
-- **Noise did not change this.** With noise of standard deviation 0.02 on Gaussian blur: vanilla 26.33, Wiener (correct guess) 28.05,
-  ours with the Gaussian kernel 27.36, ours with the true kernels 26.76.
+- **Noise matters once it is large.** Table 5 sweeps the noise level on Gaussian blur. At standard deviation 0.02 the ordering is unchanged. At
+  0.05 Wiener falls to the level of ours, and at 0.1 it is 1.8 dB below vanilla, while ours stays level with vanilla. The in-loop method with the
+  true kernels degrades faster than with an estimated Gaussian, which suggests it fits the noise.
+
+**Table 5.** bonsai, Gaussian blur, medium severity, PSNR by added noise standard deviation.
+
+| Noise | Vanilla | Wiener (correct guess) | Ours, Gaussian kernel | Ours, true kernels |
+|---|---|---|---|---|
+| 0 | 26.24 | 28.25 | 27.21 | 27.12 |
+| 0.02 | 26.33 | 28.05 | 27.36 | 26.76 |
+| 0.05 | 26.36 | 26.59 | 26.62 | 24.95 |
+| 0.1 | 25.67 | 23.84 | 25.67 | 22.93 |
+
+A second scene gives the same ordering (`counter`, Gaussian blur, medium): vanilla 25.32, ours with the Gaussian kernel 26.17, ours with the
+polyline 26.04, true kernels 26.56, correct Wiener 26.68, and Wiener with a wrong guess (sigma 4) 22.59.
 
 Our interpretation, which we have not tested directly, is that a smooth blur removes high frequencies almost entirely. The in-loop method only
 receives gradient through the blurred rendering, so it is never pushed to restore content that the blur suppressed. An explicit inverse filter
@@ -233,8 +246,8 @@ content along the direction perpendicular to the motion, which may be why the in
 
 ### 5.5 Real blurry photographs (qualitative)
 
-Deblur-NeRF [2] provides real camera-motion-blur captures. We downloaded the scenes that Google Drive let us fetch (`blurball`,
-`blurbasket`, `blurbuick`, with 27, 45 and 45 photographs; the others were rate limited) and trained vanilla 3DGS and the polyline method on them
+Deblur-NeRF [2] provides real camera-motion-blur captures. We downloaded the eight scenes that Google Drive let us fetch (`blurball`,
+`blurbasket`, `blurbuick`, `blurcoffee`, `blurdecoration`, `blurgirl`, `blurheron`, `blurparterre`) and trained vanilla 3DGS and the polyline method on them
 with identical settings (7,000 iterations, the photographs as given, no synthetic blur added). The photographs have no sharp ground truth, so
 PSNR against the held-out photographs is meaningless as a sharpness measure and we judge the renderings by eye (figure:
 [real_summary.png](figures/real_summary.png); per-scene figures `real_<scene>.png`).
@@ -242,13 +255,15 @@ PSNR against the held-out photographs is meaningless as a sharpness measure and 
 Vanilla 3DGS renders are clearly blurrier than the held-out photographs, because it averages the blur of its training photographs. The polyline
 method recovers fine detail (the leaf edges and weave of the ball in `blurball`, the basket wires in `blurbasket`) at a sharpness comparable to the
 photographs, and on `blurbuick`, where the held-out photograph is itself soft, sharper than it. It also introduces artefacts: bright, high-contrast edges
-such as the chrome headlight strip in `blurbuick` show speckled over-sharpening. This is qualitative evidence from three scenes with one global kernel per
+such as the chrome headlight strip in `blurbuick` show speckled over-sharpening. The results are uneven. `blurcoffee` and `blurdecoration` show dark or streaked
+patches, and `blurgirl` (six photographs and a moving subject) fails for both methods, with extra speckle from ours. The method works best on static, well covered
+scenes (`ball`, `basket`, `buick`, `heron`, `parterre`). This is qualitative evidence from eight scenes with one global kernel per
 photograph, not a measured improvement.
 
 ## 6. Limitations
 
 - **Synthetic, global blur.** Every kernel is uniform over the photograph. Real camera shake produces spatially varying blur, and defocus
-  depends on depth. The evaluation on real blurry captures (Section 5.5) is qualitative and covers only a few scenes.
+  depends on depth. The evaluation on real blurry captures (Section 5.5) is qualitative and covers eight scenes and is uneven.
 - **The prior must match the blur.** The polyline suits motion and the Gaussian suits defocus; the user must know which to use. On defocus and
   Gaussian blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger in PSNR.
 - **Limited breadth.** Three scenes for the main table, two for the severity sweep, one for the blur-type, ablation and seed studies. Defocus
