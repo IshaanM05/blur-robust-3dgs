@@ -31,7 +31,7 @@ support, a Makefile and `configs/methods.yaml`. The up-to-date to-do list is [NE
 
 ## Left to do (not code)
 1. Review the deck (`docs/slides.pptx`): slide copy and speaker notes are drafted; adjust wording to your own voice and rehearse the 10-minute talk.
-2. Add the teammate's name and roll number to the README.
+2. (Done) Team names and roll numbers are in the README and report.
 3. Package for Moodle: code (this repo), results (`docs/results.md`, `docs/figures/`), presentation (`docs/slides.pptx`).
 4. Optional, needs download approval: real Deblur-NeRF scenes (qualitative only) and the official Deblurring-3DGS comparison.
 

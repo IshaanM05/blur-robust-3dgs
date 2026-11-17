@@ -13,7 +13,7 @@ rendered sharp. The question we study is **when joint estimation works, and why*
 
 ## Team
 - Ishaan Mondal (24B2118)
-- [@purvanyaTyagi](https://github.com/purvanyaTyagi)
+- Purvanya Tyagi (24B0385), [@purvanyaTyagi](https://github.com/purvanyaTyagi)
 
 ## Main result
 

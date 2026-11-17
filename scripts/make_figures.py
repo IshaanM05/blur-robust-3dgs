@@ -437,6 +437,7 @@ if __name__ == "__main__":
     real_scenes()
     real_summary()
     real_summary(only=("blurball", "blurbuick", "blurparterre", "blurgirl"), name="real_slide.png")
+    real_summary(only=("blurball",), name="real_ball.png")
     blur_types()
     spectra()
     kernels()

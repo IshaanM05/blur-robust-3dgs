@@ -26,7 +26,7 @@ Update Nov 16: §3.2 and §5 are done and §3.4 is drafted (see each item). Ever
 only copy of the numbers in the repo.
 
 ## 1. Before submission (must do, no code)
-1. Add the teammate's name and roll number to the README (Team section).
+1. (Done) Team names and roll numbers are in the README and report.
 2. Read the five core papers listed in the README, then review `docs/slides.pptx`. The slide copy and speaker notes are drafts;
    put them in your own words. Rehearse the 10-minute talk out loud at least twice.
 3. Make sure the professor can see the work: the repo is private, so either make it public or add them, then submit the code, results
