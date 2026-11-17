@@ -381,6 +381,47 @@ def real_scenes(root="data/deblurnerf"):
         plt.close()
 
 
+def real_summary(root="data/deblurnerf", view=0):
+    """One zoomed crop per real scene: blurry photo, vanilla 3DGS, ours. Used on the slides."""
+    scenes = sorted(
+        d.name[: -len("_ours")]
+        for d in Path("results/real_scenes").glob("*_ours")
+        if (d / "metrics.json").exists()
+        and (R / "real_scenes" / (d.name[: -len("_ours")] + "_vanilla") / "metrics.json").exists()
+    )
+    if not scenes:
+        return
+    fig, ax = plt.subplots(len(scenes), 3, figsize=(10.5, 2.35 * len(scenes)))
+    ax = ax.reshape(len(scenes), 3)
+    for r, scene in enumerate(scenes):
+        sc = load_scene(f"{root}/{scene}")
+        ims = [sc.images[sc.test_idx[view]]] + [
+            iio.imread(R / "real_scenes" / f"{scene}_{m}" / f"test_{view}.png") for m in ("vanilla", "ours")
+        ]
+        h, w = ims[0].shape[:2]
+        y0, x0 = int(h * 0.3), int(w * 0.3)
+        for c, im in enumerate(ims):
+            ax[r, c].imshow(im[y0 : y0 + h // 2, x0 : x0 + w // 2])
+            ax[r, c].axis("off")
+            if r == 0:
+                ax[r, c].set_title(
+                    ["blurry photo (held out)", "vanilla 3DGS", "ours (polyline kernel)"][c], fontsize=11
+                )
+        ax[r, 0].text(
+            -0.04,
+            0.5,
+            scene.replace("blur", ""),
+            transform=ax[r, 0].transAxes,
+            rotation=90,
+            va="center",
+            ha="right",
+            fontsize=11,
+        )
+    plt.tight_layout()
+    plt.savefig(OUT / "real_summary.png", dpi=100)
+    plt.close()
+
+
 if __name__ == "__main__":
     for scene in ("bonsai", "counter", "garden"):
         qualitative(scene)
@@ -393,6 +434,7 @@ if __name__ == "__main__":
     noise_sweep()
     longer_training()
     real_scenes()
+    real_summary()
     blur_types()
     spectra()
     kernels()

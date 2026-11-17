@@ -2,7 +2,7 @@
 
 *CS 663 (Digital Image Processing) course project, IIT Bombay. Ishaan Mondal (24B2118), Purvanya Tyagi.*
 
-**Draft report.** Every number below comes from [results.md](results.md), which `scripts/collect.py` builds from the run outputs. All
+**Draft report.** Every number below comes from [results.md](results.md), which `scripts/collect.py` builds from the run outputs. Except Section 5.5, all
 results are on synthetic blur applied to real photographs, at 10,000 training iterations, and are single runs unless a standard deviation
 is given.
 
@@ -231,10 +231,24 @@ receives gradient through the blurred rendering, so it is never pushed to restor
 amplifies those frequencies directly, which works on noise-free synthetic data. A motion path, by contrast, preserves more high-frequency
 content along the direction perpendicular to the motion, which may be why the in-loop method does better on motion blur.
 
+### 5.5 Real blurry photographs (qualitative)
+
+Deblur-NeRF [2] provides real camera-motion-blur captures. We downloaded the scenes that Google Drive let us fetch (`blurball`,
+`blurbasket`, `blurbuick`, with 27, 45 and 45 photographs; the others were rate limited) and trained vanilla 3DGS and the polyline method on them
+with identical settings (7,000 iterations, the photographs as given, no synthetic blur added). The photographs have no sharp ground truth, so
+PSNR against the held-out photographs is meaningless as a sharpness measure and we judge the renderings by eye (figure:
+[real_summary.png](figures/real_summary.png); per-scene figures `real_<scene>.png`).
+
+Vanilla 3DGS renders are clearly blurrier than the held-out photographs, because it averages the blur of its training photographs. The polyline
+method recovers fine detail (the leaf edges and weave of the ball in `blurball`, the basket wires in `blurbasket`) at a sharpness comparable to the
+photographs, and on `blurbuick`, where the held-out photograph is itself soft, sharper than it. It also introduces artefacts: bright, high-contrast edges
+such as the chrome headlight strip in `blurbuick` show speckled over-sharpening. This is qualitative evidence from three scenes with one global kernel per
+photograph, not a measured improvement.
+
 ## 6. Limitations
 
 - **Synthetic, global blur.** Every kernel is uniform over the photograph. Real camera shake produces spatially varying blur, and defocus
-  depends on depth. We have not evaluated on real blurry captures.
+  depends on depth. The evaluation on real blurry captures (Section 5.5) is qualitative and covers only a few scenes.
 - **The prior must match the blur.** The polyline suits motion and the Gaussian suits defocus; the user must know which to use. On defocus and
   Gaussian blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger in PSNR.
 - **Limited breadth.** Three scenes for the main table, two for the severity sweep, one for the blur-type, ablation and seed studies. Defocus

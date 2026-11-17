@@ -50,7 +50,7 @@ def rgb(h):
 prs = Presentation()
 prs.slide_width, prs.slide_height = Inches(W), Inches(H)
 BLANK = prs.slide_layouts[6]
-slides_total = 10
+slides_total = 11
 
 
 def new_slide(dark=False):
@@ -480,7 +480,41 @@ notes(
     "1 min. Look at the zoomed bottom row: vanilla is smeared, guessed-kernel Wiener is slightly sharper but still soft, ours recovers the cloth texture and edges and looks like the oracle.",
 )
 
-# ---------------------------------------------------------------- 8 severity + blur types
+# ---------------------------------------------------------------- 8 real photographs
+s = new_slide()
+title(s, "Real blurry photographs")
+real_fig = FIG / "real_summary.png"
+if real_fig.exists():
+    w_, h_ = picture(s, real_fig, 0.6, 1.4, 7.4, 5.4, center=False)
+text(
+    s,
+    8.3,
+    1.5,
+    4.4,
+    4.8,
+    [
+        ("Deblur-NeRF camera-motion captures, no sharp ground truth, judged by eye.", {"space_after": 12}),
+        (
+            "Vanilla 3DGS is blurrier than the held-out photographs: it averages the blur of its training photographs.",
+            {"space_after": 12},
+        ),
+        (
+            "Ours recovers leaf edges, weave and wires at the sharpness of the photographs, and more on the softest one.",
+            {"space_after": 12},
+        ),
+        ("Artefacts: speckled over-sharpening on bright edges (the chrome headlight).", {"color": RUST, "bold": True}),
+    ],
+    size=15,
+)
+footer(s, 8)
+notes(
+    s,
+    "1 min. This is the real-data check. There is no ground truth, so say plainly that it is qualitative. Point at the "
+    "middle column: vanilla loses the detail the photographs contain. Right column: ours recovers it. Then point at the "
+    "headlight in the last row and name the artefact before anyone else does.",
+)
+
+# ---------------------------------------------------------------- 9 severity + blur types
 s = new_slide()
 title(s, "Severity, and what a wrong guess costs")
 sev = ["low", "medium", "high"]
@@ -552,7 +586,7 @@ text(
     "(sigma 2); at sigma 4 it falls 2.8 to 4.3 dB below doing nothing. Ours needs no guess.",
     size=14,
 )
-footer(s, 8)
+footer(s, 9)
 notes(
     s,
     "1.5 min. Left: the benefit over vanilla grows with severity because there is more blur to remove. Right: be "
@@ -562,7 +596,7 @@ notes(
     "know the kernel.",
 )
 
-# ---------------------------------------------------------------- 9 ablations + spectrum
+# ---------------------------------------------------------------- 10 ablations + spectrum
 s = new_slide()
 title(s, "Ablations and frequency analysis")
 abl = [
@@ -605,13 +639,13 @@ text(
     "Radially averaged power spectrum of a test view. Vanilla loses the high frequencies; our estimate recovers most of them and tracks the oracle.",
     size=14,
 )
-footer(s, 9)
+footer(s, 10)
 notes(
     s,
     "1.5 min. Left: what matters. The structured polyline prior is what makes it work; the shared kernel and free-form kernels are clearly worse. Right: the DIP interpretation, the blur is a low-pass filter, and our method restores the lost high-frequency power.",
 )
 
-# ---------------------------------------------------------------- 10 takeaways
+# ---------------------------------------------------------------- 11 takeaways
 s = new_slide(dark=True)
 title(s, "Takeaways and limits", color="FFFFFF")
 text(
@@ -645,7 +679,7 @@ text(
             {"space_after": 10},
         ),
         ("One kernel family per blur type; the prior has to be chosen.", {"space_after": 10}),
-        ("Three scenes, few seeds; no real blurry capture yet.", {}),
+        ("Three scenes, few seeds. Real blur is judged by eye on a few scenes, with artefacts on bright edges.", {}),
     ],
     size=17,
     color="FFFFFF",
@@ -653,7 +687,7 @@ text(
 text(
     s, 0.8, 6.3, 11.8, 0.5, "Code, results and figures: github.com/IshaanM05/blur-robust-3dgs", size=14, color="AAB4C5"
 )
-footer(s, 10, dark=True)
+footer(s, 11, dark=True)
 notes(
     s,
     "1 min. Close on the message: the structure of the prior matters more than the optimiser. Be upfront about the limits: synthetic blur, global kernel, few scenes.",

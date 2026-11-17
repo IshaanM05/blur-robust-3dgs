@@ -110,6 +110,20 @@ SSIM / LPIPS for the same runs:
   blur removes high frequencies, and an explicit inverse filter can amplify them on this noise-free synthetic data.
 - Adding sensor-like noise (sigma 0.02) did not change this on Gaussian blur: Wiener 28.05, ours 27.36, vanilla 26.33.
 
+### Real blurry photographs (qualitative)
+
+Deblur-NeRF also provides real camera-motion-blur captures. We trained vanilla 3DGS and the polyline method (7,000 iterations,
+same settings for both) on the scenes we could download from its Google Drive: `blurball`, `blurbasket` and `blurbuick` (25 to 45
+photographs each). There is no sharp ground truth, so this is judged by eye on held-out photographs
+([docs/figures/real_summary.png](docs/figures/real_summary.png), per-scene figures `docs/figures/real_<scene>.png`):
+
+- Vanilla 3DGS renders are clearly blurrier than the held-out photographs: it averages the blur of its training photographs.
+- Our renders recover the fine detail (leaf edges and the weave of the ball in `blurball`, the basket wires in `blurbasket`) at a sharpness
+  comparable to the photographs, and on `blurbuick`, where the held-out photograph is itself soft, sharper than it.
+- There are artefacts: on `blurbuick` bright, high-contrast edges such as the chrome headlight strip show speckled over-sharpening.
+
+This supports the method on real blur, but it is three scenes judged visually, with a single global kernel per photograph.
+
 ### Frequency view
 
 The radial power spectrum of a rendered test view ([docs/figures/spectrum_bonsai_motion_medium.png](docs/figures/spectrum_bonsai_motion_medium.png))
@@ -166,7 +180,8 @@ Open work and ideas for extending the project: [docs/NEXT_STEPS.md](docs/NEXT_ST
 - The blur is synthetic and global per photo. Real blur varies across the image and with depth.
 - Each blur type needs a prior that can represent it. The polyline prior suits motion blur; on defocus and Gaussian
   blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger.
-- Three scenes (the severity sweep covers two), three training seeds on one scene, no real blurry captures.
+- Three scenes (the severity sweep covers two), three training seeds on one scene. The real blurry captures are judged by eye only
+  (no ground truth), on a handful of scenes.
 
 ## References
 1. Kerbl et al., 3D Gaussian Splatting for Real-Time Radiance Field Rendering: https://arxiv.org/abs/2308.04079
