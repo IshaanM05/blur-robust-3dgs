@@ -650,14 +650,14 @@ block(
     [
         "Bright edges show speckled over-sharpening.",
         "The moving subject in the girl scene (third row) is not reconstructed by either method.",
-        "No ground truth: judged by eye, 8 scenes.",
+        "No ground truth: judged by eye, 9 scenes.",
     ],
     size=15,
     color=ACCENT,
 )
 notes(
     s,
-    "1 min. Deblur-NeRF real captures, eight scenes, four shown. There is no sharp ground truth, so this is qualitative "
+    "1 min. Deblur-NeRF real captures, nine scenes, four shown. There is no sharp ground truth, so this is qualitative "
     "and we say so. Columns: held-out photograph, vanilla, ours. Ours recovers detail on ball, buick and parterre. The "
     "third row is a failure: a moving person and only six photographs. We show it because it is the honest picture.",
 )

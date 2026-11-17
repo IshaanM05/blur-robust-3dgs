@@ -132,8 +132,8 @@ SSIM / LPIPS for the same runs:
 ### Real blurry photographs (qualitative)
 
 Deblur-NeRF also provides real camera-motion-blur captures. We trained vanilla 3DGS and the polyline method (7,000 iterations,
-same settings for both) on the eight scenes we could download from its Google Drive: `blurball`, `blurbasket`, `blurbuick`,
-`blurcoffee`, `blurdecoration`, `blurgirl`, `blurheron` and `blurparterre`. There is no sharp ground truth, so this is judged by eye on held-out photographs
+same settings for both) on the nine scenes we could download from its Google Drive: `blurball`, `blurbasket`, `blurbuick`,
+`blurcoffee`, `blurdecoration`, `blurgirl`, `blurheron`, `blurparterre` and `blurpuppet`. There is no sharp ground truth, so this is judged by eye on held-out photographs
 ([docs/figures/real_summary.png](docs/figures/real_summary.png), per-scene figures `docs/figures/real_<scene>.png`):
 
 - Vanilla 3DGS renders are clearly blurrier than the held-out photographs: it averages the blur of its training photographs.

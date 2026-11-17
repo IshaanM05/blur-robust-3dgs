@@ -255,8 +255,8 @@ content along the direction perpendicular to the motion, which may be why the in
 
 ### 5.5 Real blurry photographs (qualitative)
 
-Deblur-NeRF [2] provides real camera-motion-blur captures. We downloaded the eight scenes that Google Drive let us fetch (`blurball`,
-`blurbasket`, `blurbuick`, `blurcoffee`, `blurdecoration`, `blurgirl`, `blurheron`, `blurparterre`) and trained vanilla 3DGS and the polyline method on them
+Deblur-NeRF [2] provides real camera-motion-blur captures. We downloaded the nine scenes that Google Drive let us fetch (`blurball`,
+`blurbasket`, `blurbuick`, `blurcoffee`, `blurdecoration`, `blurgirl`, `blurheron`, `blurparterre`, `blurpuppet`) and trained vanilla 3DGS and the polyline method on them
 with identical settings (7,000 iterations, the photographs as given, no synthetic blur added). The photographs have no sharp ground truth, so
 PSNR against the held-out photographs is meaningless as a sharpness measure and we judge the renderings by eye (figure:
 [real_summary.png](figures/real_summary.png); per-scene figures `real_<scene>.png`).
@@ -266,13 +266,13 @@ method recovers fine detail (the leaf edges and weave of the ball in `blurball`,
 photographs, and on `blurbuick`, where the held-out photograph is itself soft, sharper than it. It also introduces artefacts: bright, high-contrast edges
 such as the chrome headlight strip in `blurbuick` show speckled over-sharpening. The results are uneven. `blurcoffee` and `blurdecoration` show dark or streaked
 patches, and `blurgirl` (six photographs and a moving subject) fails for both methods, with extra speckle from ours. The method works best on static, well covered
-scenes (`ball`, `basket`, `buick`, `heron`, `parterre`). This is qualitative evidence from eight scenes with one global kernel per
+scenes (`ball`, `basket`, `buick`, `heron`, `parterre`). This is qualitative evidence from nine scenes with one global kernel per
 photograph, not a measured improvement.
 
 ## 6. Limitations
 
 - **Synthetic, global blur.** Every kernel is uniform over the photograph. Real camera shake produces spatially varying blur, and defocus
-  depends on depth. The evaluation on real blurry captures (Section 5.5) is qualitative and covers eight scenes and is uneven.
+  depends on depth. The evaluation on real blurry captures (Section 5.5) is qualitative and covers nine scenes and is uneven.
 - **The prior must match the blur.** The polyline suits motion and the Gaussian suits defocus; the user must know which to use. On defocus and
   Gaussian blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger in PSNR.
 - **Limited breadth.** Three scenes for the main table, two for the severity sweep, one for the blur-type, ablation and seed studies. Defocus
