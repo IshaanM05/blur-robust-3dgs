@@ -110,7 +110,16 @@ def new_slide(title, n):
     rect(s, 0, 1.0, W, 0.05, MID)
     text(s, 0.6, 0, W - 1.2, 1.0, title, size=30, bold=True, color="FFFFFF", anchor=MSO_ANCHOR.MIDDLE)
     rect(s, 0, 7.1, W, 0.4, PALE)
-    text(s, 0.6, 7.19, 8, 0.25, f"{AUTHORS}   |   Blur-robust 3D Gaussian Splatting   |   CS 663", size=11, color=GRAY)
+    text(
+        s,
+        0.6,
+        7.19,
+        8,
+        0.25,
+        f"{AUTHORS}   |   Blur-robust 3D Gaussian Splatting   |   Fundamentals of DIP",
+        size=11,
+        color=GRAY,
+    )
     text(s, W - 1.6, 7.19, 1.0, 0.25, f"{n} / {TOTAL}", size=11, color=GRAY, align=PP_ALIGN.RIGHT)
     return s
 
@@ -218,7 +227,7 @@ text(
     1.6,
     [
         ("Ishaan Mondal (24B2118)   Purvanya Tyagi (24B0385)", {"size": 22, "bold": True}),
-        ("CS 663: Digital Image Processing, IIT Bombay", {"size": 18, "color": GRAY}),
+        ("Fundamentals of Digital Image Processing (CS 663), IIT Bombay", {"size": 18, "color": GRAY}),
         ("github.com/IshaanM05/blur-robust-3dgs", {"size": 16, "color": GRAY}),
     ],
 )

@@ -1,6 +1,6 @@
 # Blur-Robust 3D Gaussian Splatting via Joint Per-View Blur-Kernel Estimation
 
-CS 663 (Digital Image Processing) course project, IIT Bombay.
+Fundamentals of Digital Image Processing (CS 663) course project, IIT Bombay.
 
 3D Gaussian Splatting (3DGS) rebuilds a scene from many posed photos, but it assumes the photos are sharp. When they
 are blurred by camera motion or defocus, vanilla 3DGS bakes the blur into the scene. We treat blur as an image
