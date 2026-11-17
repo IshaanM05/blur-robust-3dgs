@@ -53,6 +53,9 @@ def rgb(h):
 
 prs = Presentation()
 prs.slide_width, prs.slide_height = Inches(W), Inches(H)
+prs.core_properties.author = "Ishaan Mondal, Purvanya Tyagi"
+prs.core_properties.title = "Blur-Robust 3D Gaussian Splatting via Joint Per-View Blur-Kernel Estimation"
+prs.core_properties.comments = ""
 
 
 def text(slide, x, y, w, h, content, size=16, bold=False, color=INK, align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP):

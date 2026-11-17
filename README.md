@@ -46,7 +46,7 @@ The same runs in SSIM (higher is better) / LPIPS (lower is better):
 - A guessed kernel can be worse than doing nothing: on garden, guessed-kernel Wiener (22.86) is below vanilla (23.18).
 
 Full tables for every run are in [docs/results.md](docs/results.md); figures are in [docs/figures](docs/figures). A
-paper-style write-up (draft) is in [docs/report.md](docs/report.md).
+paper-style write-up is in [docs/report.md](docs/report.md).
 
 ### Robustness checks
 - Two other random draws of the blur (bonsai, motion medium): ours 29.98 and 29.86 dB, vanilla 26.28 in both (first draw: 29.93 and 26.42).
@@ -172,10 +172,9 @@ python -m pytest -q tests     # or: make test
 ablations) are defined in [configs/methods.yaml](configs/methods.yaml).
 Download Mip-NeRF 360 (see [data/README.md](data/README.md)), then:
 ```bash
-scripts/run_all.sh        # main table, severity sweep, blur types, ablations, seeds (several hours on one GPU)
-scripts/run_extras.sh     # secondary experiments
-scripts/run_extras2.sh    # robustness checks on defocus and Gaussian blur
-python scripts/collect.py && python scripts/make_figures.py && python scripts/build_slides.py
+scripts/run_experiments.sh   # every experiment in the report (about a day on one laptop GPU)
+python scripts/download_deblurnerf.py && scripts/run_real.sh   # optional: the real photographs
+make rebuild                 # tables, figures, slides and report PDF from results/
 ```
 Every run is resumable: finished runs have a `metrics.json` and are skipped. A single run, for example:
 ```bash
@@ -189,14 +188,12 @@ Experiments ran on one RTX 4080 laptop GPU (12 GB); a bonsai run takes 4 to 7 mi
 ```
 configs/       experiment method definitions (methods.yaml)
 data/          datasets and blurred caches (git-ignored)
-docs/          results tables, figures, experiment log, talk outline, draft slides
+docs/          report (md and pdf), slides, results tables, figures
 results/       run outputs (git-ignored)
 scripts/       experiment runners, data preparation, figure and table generation
 src/blur3dgs/  library code
 tests/         unit tests
 ```
-
-Open work and ideas for extending the project: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 
 ## Limitations
 - The blur is synthetic and global per photo. Real blur varies across the image and with depth.

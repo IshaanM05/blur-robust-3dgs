@@ -2,7 +2,7 @@
 
 *CS 663 (Digital Image Processing) course project, IIT Bombay. Ishaan Mondal (24B2118), Purvanya Tyagi (24B0385).*
 
-**Draft report.** Every number below comes from [results.md](results.md), which `scripts/collect.py` builds from the run outputs. Except Section 5.5, all
+Every number below comes from [results.md](results.md), which `scripts/collect.py` builds from the run outputs. Except Section 5.5, all
 results are on synthetic blur applied to real photographs, at 10,000 training iterations, and are single runs unless a standard deviation
 is given.
 

@@ -9,7 +9,6 @@ Methods are defined in configs/methods.yaml (pass --config to use another file).
 """
 
 import argparse
-import os
 import subprocess
 import sys
 import time
@@ -19,8 +18,6 @@ import yaml
 
 CONFIG = Path(__file__).resolve().parent.parent / "configs" / "methods.yaml"
 DRY_RUN = False
-# while this file exists no new run is started (scripts/pause.sh creates it); runs already started finish normally
-PAUSE_FILE = Path(os.environ.get("BLUR_PAUSE_FILE", "results/PAUSE"))
 
 
 def load_methods(path=CONFIG):
@@ -80,9 +77,6 @@ def main():
         p.error(f"unknown methods {unknown}; defined in {a.config}: {', '.join(methods)}")
 
     for combo in a.combos:
-        if PAUSE_FILE.exists():
-            print(f"paused: not starting {combo}", flush=True)
-            return
         scene, kind, sev, *noise = combo.split(":")
         tag = f"{kind}_{sev}" + (f"_n{noise[0]}" if noise else "") + (f"_b{a.blur_seed}" if a.blur_seed else "")
         cache = Path("data/blurred") / scene / tag
@@ -93,9 +87,6 @@ def main():
         out_root.mkdir(parents=True, exist_ok=True)
 
         for m in a.methods:
-            if PAUSE_FILE.exists():
-                print(f"paused: not starting {scene} {tag} {m}", flush=True)
-                return
             out = out_root / m
             if (out / "metrics.json").exists():
                 print("skip (done):", scene, tag, m, flush=True)

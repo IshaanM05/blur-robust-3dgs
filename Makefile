@@ -3,21 +3,19 @@
 PYTHON ?= python
 export PYTHONPATH := $(CURDIR)/src$(if $(PYTHONPATH),:$(PYTHONPATH))
 
-.PHONY: help install test lint format run_all run_extras tables figures slides report rebuild package
+.PHONY: help install test lint format run_experiments tables figures slides report rebuild
 
 help:
 	@echo "install     pip install -e .[dev]"
 	@echo "test        run the unit tests"
 	@echo "lint        ruff check"
 	@echo "format      ruff format and fix import order"
-	@echo "run_all     every experiment in the report (GPU, several hours, resumable)"
-	@echo "run_extras  secondary experiments and robustness checks (GPU, resumable)"
+	@echo "run_experiments  every experiment in the report (GPU, about a day, resumable)"
 	@echo "tables      rebuild docs/results.md from results/"
 	@echo "figures     rebuild docs/figures from results/"
 	@echo "slides      rebuild docs/slides.pptx"
 	@echo "report      rebuild docs/report.pdf from docs/report.md"
 	@echo "rebuild     tables, figures, slides and the report PDF"
-	@echo "package     build the Moodle bundle (needs everything committed)"
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -32,12 +30,8 @@ format:
 	$(PYTHON) -m ruff check --select I --fix .
 	$(PYTHON) -m ruff format .
 
-run_all:
-	scripts/run_all.sh
-
-run_extras:
-	scripts/run_extras.sh
-	scripts/run_extras2.sh
+run_experiments:
+	scripts/run_experiments.sh
 
 # collect.py rewrites docs/results.md from results/; refuse when results/ is empty (e.g. a fresh clone),
 # so the committed tables are not wiped.
@@ -55,6 +49,3 @@ report:
 	$(PYTHON) scripts/build_report_pdf.py
 
 rebuild: figures slides report
-
-package:
-	scripts/package_submission.sh
