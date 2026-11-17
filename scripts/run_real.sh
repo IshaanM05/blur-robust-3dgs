@@ -6,6 +6,7 @@
 cd "$(dirname "$0")/.."
 . .venv/bin/activate
 mkdir -p results/real_scenes
+iters=${ITERS:-7000}  # these scenes have only 25 to 45 photographs
 
 for dir in data/deblurnerf/*/; do
     scene=$(basename "$dir")
@@ -15,7 +16,7 @@ for dir in data/deblurnerf/*/; do
         out=results/real_scenes/${scene}_$method
         [ -e results/STOP_REAL ] && { echo "stopped before $scene $method"; exit 0; }
         [ -e "$out/metrics.json" ] && { echo "skip (done) $scene $method"; continue; }
-        args="--root data/deblurnerf --scene $scene --input clean --iters 10000 --out $out"
+        args="--root data/deblurnerf --scene $scene --input clean --iters $iters --out $out"
         [ "$method" = ours ] && args="$args --kernel polyline --poly_init_len 6 --kernel_start 0 --lr_kernel 0.05"
         python scripts/train.py $args > "$out.log" 2>&1
         echo "done $scene $method rc=$?"

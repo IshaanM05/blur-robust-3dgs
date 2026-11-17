@@ -346,6 +346,41 @@ def longer_training(scene="bonsai", methods=("vanilla", "wiener_guess", "ours_po
             print(f"  {m:14s} {a:.2f} -> {b:.2f}")
 
 
+def real_scenes(root="data/deblurnerf"):
+    """Held-out views of the real blurry scenes: blurry photo, vanilla 3DGS and ours (no sharp ground truth)."""
+    names = sorted(
+        p.name[: -len("_vanilla")]
+        for p in Path("results/real_scenes").glob("*_vanilla/metrics.json".replace("/metrics.json", ""))
+    )
+    for scene in names:
+        if not (R / "real_scenes" / f"{scene}_ours" / "metrics.json").exists():
+            continue
+        sc = load_scene(f"{root}/{scene}")
+        views = [
+            j for j in range(len(sc.test_idx)) if (R / "real_scenes" / f"{scene}_ours" / f"test_{j}.png").exists()
+        ][:2]
+        fig, ax = plt.subplots(2 * len(views), 3, figsize=(13, 4.4 * len(views)))
+        ax = ax.reshape(2 * len(views), 3)
+        for r, j in enumerate(views):
+            ims = [sc.images[sc.test_idx[j]]] + [
+                iio.imread(R / "real_scenes" / f"{scene}_{m}" / f"test_{j}.png") for m in ("vanilla", "ours")
+            ]
+            h, w = ims[0].shape[:2]
+            y0, x0 = int(h * 0.3), int(w * 0.3)
+            for c, (title, im) in enumerate(
+                zip(["blurry photo (held out)", "vanilla 3DGS", "ours (polyline kernel)"], ims, strict=False)
+            ):
+                ax[2 * r, c].imshow(im)
+                ax[2 * r, c].set_title(title if r == 0 else "")
+                ax[2 * r + 1, c].imshow(im[y0 : y0 + h // 3, x0 : x0 + w // 3])
+                ax[2 * r, c].axis("off")
+                ax[2 * r + 1, c].axis("off")
+        fig.suptitle(f"{scene}: real camera-motion blur (no sharp ground truth); rows 2 and 4 are zooms")
+        plt.tight_layout()
+        plt.savefig(OUT / f"real_{scene}.png", dpi=80)
+        plt.close()
+
+
 if __name__ == "__main__":
     for scene in ("bonsai", "counter", "garden"):
         qualitative(scene)
@@ -357,6 +392,7 @@ if __name__ == "__main__":
     blur_realisations()
     noise_sweep()
     longer_training()
+    real_scenes()
     blur_types()
     spectra()
     kernels()

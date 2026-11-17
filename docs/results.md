@@ -38,6 +38,21 @@
 | ours_oracle_kernel | 26.76 | 0.810 | 0.198 | 0.000 | 562426 |
 | vanilla | 26.33 | 0.764 | 0.369 | - | 537198 |
 
+## bonsai / gaussian_medium_n0.05
+
+| method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
+|---|---|---|---|---|---|
+| ours_gauss | 26.62 | 0.779 | 0.246 | 0.077 | 408489 |
+| wiener_guess | 26.59 | 0.733 | 0.348 | - | 1144667 |
+| vanilla | 26.36 | 0.760 | 0.329 | - | 437524 |
+| ours_oracle_kernel | 24.95 | 0.748 | 0.246 | 0.000 | 410008 |
+
+## bonsai / gaussian_medium_n0.1
+
+| method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
+|---|---|---|---|---|---|
+| vanilla | 25.67 | 0.707 | 0.332 | - | 386527 |
+
 ## bonsai / motion_high
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
@@ -101,6 +116,7 @@
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
 |---|---|---|---|---|---|
+| ours_polyline | 29.86 | 0.908 | 0.112 | 0.150 | 786343 |
 | wiener_guess | 26.61 | 0.811 | 0.225 | - | 1684806 |
 | vanilla | 26.28 | 0.765 | 0.350 | - | 775368 |
 
@@ -124,7 +140,12 @@
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
 |---|---|---|---|---|---|
+| ours_oracle_kernel | 27.18 | 0.825 | 0.158 | 0.000 | 507041 |
+| ours_gauss | 26.59 | 0.796 | 0.211 | 0.096 | 488647 |
+| wiener_guess | 26.52 | 0.811 | 0.265 | - | 810764 |
+| ours_polyline | 26.48 | 0.794 | 0.250 | 0.154 | 492228 |
 | vanilla | 25.72 | 0.760 | 0.355 | - | 484412 |
+| wiener_guess_s4 | 21.52 | 0.613 | 0.417 | - | 1250015 |
 
 ## counter / motion_high
 
