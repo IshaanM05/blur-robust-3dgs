@@ -29,12 +29,24 @@ know the true kernel; the last two rows use it and are upper-bound references.
 | Ours with the true kernels | 30.40 | 27.96 | 25.27 |
 | Wiener deblur with the true kernel, then 3DGS | 30.99 | 28.19 | 25.76 |
 
+The same runs in SSIM (higher is better) / LPIPS (lower is better):
+
+| Method | bonsai | counter | garden |
+|---|---|---|---|
+| Vanilla 3DGS on blurry photos | 0.773 / 0.345 | 0.745 / 0.365 | 0.528 / 0.563 |
+| Wiener deblur with a guessed kernel, then 3DGS | 0.822 / 0.222 | 0.772 / 0.257 | 0.601 / 0.440 |
+| RL deblur with a guessed kernel, then 3DGS | 0.821 / 0.230 | 0.776 / 0.262 | 0.608 / 0.458 |
+| **Ours, polyline kernel (blind)** | **0.910 / 0.111** | **0.859 / 0.148** | **0.712 / 0.283** |
+| Ours with the true kernels | 0.920 / 0.093 | 0.870 / 0.128 | 0.731 / 0.250 |
+| Wiener deblur with the true kernel, then 3DGS | 0.938 / 0.075 | 0.894 / 0.112 | 0.814 / 0.148 |
+
 - The polyline prior stays within 0.1 to 0.5 dB of the true-kernel result and 2 to 3.5 dB above every blind baseline.
 - The gain over vanilla grows with blur severity on bonsai: +2.0 dB (low), +3.5 dB (medium), +4.5 dB (high).
 - Over three training seeds on bonsai: ours 30.02 +- 0.08, vanilla 26.29 +- 0.18, guessed-kernel Wiener 26.76 +- 0.06.
 - A guessed kernel can be worse than doing nothing: on garden, guessed-kernel Wiener (22.86) is below vanilla (23.18).
 
-Full tables for every run are in [docs/results.md](docs/results.md); figures are in [docs/figures](docs/figures).
+Full tables for every run are in [docs/results.md](docs/results.md); figures are in [docs/figures](docs/figures). A
+paper-style write-up (draft) is in [docs/report.md](docs/report.md).
 
 ### Why the kernel parametrisation matters
 
@@ -73,10 +85,25 @@ the defocus disk. We therefore also ran deliberately wrong guesses (sigma 1 and 
 | Ours, Gaussian kernel (blind) | 27.21 | 27.25 |
 | Ours with the true kernels | 27.12 | 28.62 |
 
+SSIM / LPIPS for the same runs:
+
+| Method | Gaussian blur | Defocus |
+|---|---|---|
+| Vanilla 3DGS | 0.759 / 0.386 | 0.780 / 0.334 |
+| Wiener, guess sigma 1 | 0.782 / 0.344 | 0.775 / 0.256 |
+| Wiener, guess sigma 2 (matches the truth) | 0.855 / 0.242 | 0.852 / 0.232 |
+| Wiener, guess sigma 4 | 0.676 / 0.404 | 0.650 / 0.413 |
+| Ours, polyline kernel (blind) | 0.804 / 0.259 | 0.813 / 0.232 |
+| Ours, Gaussian kernel (blind) | 0.815 / 0.213 | 0.806 / 0.194 |
+| Ours with the true kernels | 0.820 / 0.192 | 0.872 / 0.148 |
+
 - Our blind methods are about 1 dB above vanilla on these blurs, a smaller gain than on motion blur, and they do not beat
   Wiener when Wiener is given the right kernel.
 - Classical deconvolution is fragile: a guess of sigma 4 lands 2.8 dB (Gaussian) and 4.3 dB (defocus) below vanilla.
   Ours needs no guess, so it is the safer choice when the kernel is unknown.
+- The perceptual metric tells a slightly different story: the blind Gaussian kernel has a lower (better) LPIPS than the
+  correctly guessed Wiener (0.213 against 0.242 on Gaussian blur, 0.194 against 0.232 on defocus), although Wiener wins on
+  PSNR and SSIM.
 - The Gaussian kernel recovers the kernel better than the polyline (error 0.03 to 0.09 against 0.14 to 0.16) but does not
   score higher, so kernel accuracy is not what limits PSNR on these blurs.
 - Even with the true kernel, the in-loop method (27.12) trails the Wiener pre-deblur (28.25) on Gaussian blur. A smooth
@@ -102,10 +129,11 @@ the true-kernel result.
 ## Reproducing
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export PYTHONPATH=$PWD/src
-python -m pytest -q tests
+pip install -e ".[dev]"      # or: pip install -r requirements.txt && export PYTHONPATH=$PWD/src
+python -m pytest -q tests     # or: make test
 ```
+`make help` lists the common tasks. The methods that `scripts/run_matrix.py` can run (baselines, our variants,
+ablations) are defined in [configs/methods.yaml](configs/methods.yaml).
 Download Mip-NeRF 360 (see [data/README.md](data/README.md)), then:
 ```bash
 scripts/run_all.sh        # main table, severity sweep, blur types, ablations, seeds (several hours on one GPU)
@@ -123,6 +151,7 @@ Experiments ran on one RTX 4080 laptop GPU (12 GB); a bonsai run takes 4 to 7 mi
 
 ## Layout
 ```
+configs/       experiment method definitions (methods.yaml)
 data/          datasets and blurred caches (git-ignored)
 docs/          results tables, figures, experiment log, talk outline, draft slides
 results/       run outputs (git-ignored)
