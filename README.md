@@ -48,6 +48,12 @@ The same runs in SSIM (higher is better) / LPIPS (lower is better):
 Full tables for every run are in [docs/results.md](docs/results.md); figures are in [docs/figures](docs/figures). A
 paper-style write-up (draft) is in [docs/report.md](docs/report.md).
 
+### Robustness checks
+- Two other random draws of the blur (bonsai, motion medium): ours 29.98 and 29.86 dB, vanilla 26.28 in both (first draw: 29.93 and 26.42).
+- 30,000 iterations (bonsai): ours 30.92, vanilla 26.49, guessed Wiener 26.41. Vanilla gains 0.07 dB from three times the training, ours 1.0 dB.
+- Richardson-Lucy with a guessed kernel (counter): 24.21 dB at low and 24.48 at high severity, against vanilla 27.08 and 24.21 and ours 28.12 and 27.41.
+- Training on the sharp photographs gives 30.88, 28.45 and 26.25 dB (bonsai, counter, garden), the ceiling for each scene.
+
 ### Why the kernel parametrisation matters
 
 A free-form per-photo kernel (a K x K softmax) is the obvious choice and it fails: the kernel collapses to a delta and

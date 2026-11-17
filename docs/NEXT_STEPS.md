@@ -48,8 +48,8 @@ Setup: Python venv from `requirements.txt`, `export PYTHONPATH=$PWD/src`, Mip-Ne
    python scripts/run_matrix.py --combos counter:defocus:medium counter:gaussian:medium \
        --methods vanilla wiener_guess wiener_guess_s1 wiener_guess_s4 ours_polyline ours_gauss ours_oracle_kernel
    ```
-3. **Fill the remaining table gaps**: `rl_guess` on counter low and high (`--combos counter:motion:low counter:motion:high --methods rl_guess`).
-4. **Longer training** (30k iterations) on bonsai medium for vanilla, Wiener guess and ours, to check the conclusions are not an
+3. (Done) **Table gaps**: `rl_guess` on counter low and high (`--combos counter:motion:low counter:motion:high --methods rl_guess`).
+4. (Done) **Longer training** (30k iterations) on bonsai medium for vanilla, Wiener guess and ours, to check the conclusions are not an
    artefact of stopping at 10k (`--iters 30000 --suffix _30k`).
 5. **Several random blurs, not just several training seeds.** The seed study varies only the optimiser seed; the blurred photos are
    the same. Make `prepare_blur.py --seed N` produce a separate cache tag (for example `motion_medium_b1`), then run the three main

@@ -107,6 +107,14 @@
 | abl_views25 | 23.64 | 0.815 | 0.173 | 0.082 | 586212 |
 | vanilla_views25 | 22.32 | 0.692 | 0.326 | - | 583855 |
 
+## bonsai / motion_medium_30k
+
+| method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
+|---|---|---|---|---|---|
+| ours_polyline | 30.92 | 0.922 | 0.085 | 0.148 | 1052261 |
+| vanilla | 26.49 | 0.768 | 0.330 | - | 1025708 |
+| wiener_guess | 26.41 | 0.807 | 0.208 | - | 3010290 |
+
 ## bonsai / motion_medium_b1
 
 | method | PSNR | SSIM | LPIPS | kernel L2 | #Gaussians |
@@ -168,6 +176,7 @@
 | wiener_oracle | 28.08 | 0.888 | 0.116 | - | 927596 |
 | ours_oracle_kernel | 27.77 | 0.856 | 0.139 | 0.000 | 483147 |
 | ours_polyline | 27.41 | 0.840 | 0.167 | 0.128 | 446106 |
+| rl_guess | 24.48 | 0.701 | 0.325 | - | 774454 |
 | wiener_guess | 24.29 | 0.691 | 0.310 | - | 803240 |
 | vanilla | 24.21 | 0.677 | 0.455 | - | 462980 |
 
@@ -180,6 +189,7 @@
 | ours_polyline | 28.12 | 0.881 | 0.124 | 0.151 | 615043 |
 | vanilla | 27.08 | 0.837 | 0.236 | - | 614077 |
 | wiener_guess | 24.30 | 0.761 | 0.283 | - | 1501539 |
+| rl_guess | 24.21 | 0.771 | 0.255 | - | 1360765 |
 
 ## counter / motion_medium
 

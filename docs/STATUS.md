@@ -11,8 +11,7 @@ To continue (all resumable, finished runs are skipped):
 ```bash
 scripts/resume.sh        # checks the cached files for damage, then restarts the rest of the queue
 ```
-What the queue still has: remaining counter defocus / Gaussian runs, the noise sweep (0.05 and 0.1) on Gaussian blur, 30k-iteration runs on
-bonsai, `rl_guess` on counter low and high, and the polyline run for blur realisation 2. To pause safely again: `scripts/pause.sh`.
+All planned runs have finished, including the 30k-iteration bonsai runs and `rl_guess` on counter low and high (Nov 17, 9:40 PM). To pause safely again: `scripts/pause.sh`.
 
 **Real blurry scenes (Deblur-NeRF).** `scripts/download_deblurnerf.py` fetches only `images_4`, `sparse`, `poses_bounds.npy` and the holdout file
 per scene. Downloaded: `blurball` (27 photos) and `blurbasket` (45). Google Drive then rate limited the downloads, so the other eight scenes are

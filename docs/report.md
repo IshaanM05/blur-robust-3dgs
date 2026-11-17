@@ -164,6 +164,15 @@ some detail that an explicit inverse filter recovers on this noise-free data (se
 [severity_counter_motion.png](figures/severity_counter_motion.png)). At low severity on bonsai the guessed-kernel Wiener baseline (25.20) is
 3.3 dB *below* vanilla (28.49): a plausible reason is that deconvolving with a kernel larger than the true one does more harm than the blur (we did not test this).
 
+**Robustness checks.** (i) *Blur realisation:* two further random draws of the blur on bonsai give 29.98 and 29.86 dB for the polyline method
+(29.93 for the first draw), against 26.28 for vanilla in both, so the result does not depend on one draw. (ii) *Longer training:* at 30,000
+iterations on bonsai the polyline method reaches 30.92 dB (SSIM 0.922, LPIPS 0.085), vanilla 26.49 and guessed-kernel Wiener 26.41. Vanilla
+gains only 0.07 dB from three times the training while ours gains 1.0 dB, so the gap widens rather than closing. (iii) *Richardson-Lucy with a
+guessed kernel* on counter scores 24.21 and 24.48 dB at low and high severity, against 27.08 and 24.21 for vanilla: at low severity the wrong
+guess costs 2.9 dB, and at high severity it gains only 0.3 dB, while ours scores 28.12 and 27.41. (iv) *Sharp-input ceiling:* 3DGS trained on the
+unblurred photographs scores 30.88, 28.45 and 26.25 dB on bonsai, counter and garden; our blind method closes most of the gap on bonsai
+(29.93) and counter (27.72).
+
 **Frequency view.** The radial power spectrum of a rendered test view shows vanilla 3DGS losing the high frequencies removed by the blur,
 while our estimate recovers most of them and tracks the true-kernel run (figure: [spectrum_bonsai_motion_medium.png](figures/spectrum_bonsai_motion_medium.png)).
 
@@ -267,7 +276,7 @@ photograph, not a measured improvement.
 - **The prior must match the blur.** The polyline suits motion and the Gaussian suits defocus; the user must know which to use. On defocus and
   Gaussian blur our gain is 0.5 to 1 dB and a correctly guessed classical deconvolution is stronger in PSNR.
 - **Limited breadth.** Three scenes for the main table, two for the severity sweep, one for the blur-type, ablation and seed studies. Defocus
-  and Gaussian kernels are identical across photographs. The seed study varies the optimiser seed, not the blur realisation. All runs stop at
+  and Gaussian kernels are identical across photographs. The longer-training check (30,000 iterations) covers one scene; all other runs stop at
   10,000 iterations.
 - **No comparison with the original implementations** of Deblur-NeRF, Deblurring 3DGS or BAD-Gaussians.
 
