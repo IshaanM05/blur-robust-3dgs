@@ -124,7 +124,7 @@ def new_slide(title, n):
     return s
 
 
-def block(slide, x, y, w, h, head, lines, size=16, color=MID):
+def block(slide, x, y, w, h, head, lines, size=17, color=MID):
     """A Beamer block: coloured header strip over a pale body."""
     rect(slide, x, y, w, 0.42, color)
     text(slide, x + 0.15, y, w - 0.3, 0.42, head, size=16, bold=True, color="FFFFFF", anchor=MSO_ANCHOR.MIDDLE)
@@ -315,13 +315,19 @@ block(
     color=ACCENT,
 )
 equation(s, r"\hat X(u,v)=\frac{\bar H(u,v)}{|H(u,v)|^{2}+\mathrm{NSR}}\,Y(u,v)", 9.8, 1.45, 0.95, "wiener")
-caption(s, 7.0, 2.55, 5.6, "Wiener filter: an inverse filter damped by the noise-to-signal ratio.")
+caption(
+    s,
+    7.0,
+    2.55,
+    5.8,
+    "Wiener filter. Y: Fourier transform of the blurry photograph. H: transform of the kernel. NSR: noise-to-signal ratio, which keeps the division from amplifying noise.",
+)
 block(
     s,
     6.9,
-    3.3,
+    3.55,
     5.9,
-    3.5,
+    3.3,
     "Our route: deblur inside the reconstruction",
     [
         "The 3D scene must explain every photograph through its own kernel.",
@@ -399,9 +405,16 @@ notes(
 
 # ---------------------------------------------------------------- 5 kernel prior
 s = new_slide("The kernel needs a prior, otherwise it cancels out", 5)
-picture(s, FIG / "kernels_compare.png", 0.5, 1.3, 8.4, 5.6)
 bl = get("bonsai", "motion_medium", "ours_polyline", "kernel_l2")
 fl = get("bonsai", "motion_medium", "ours_free", "kernel_l2")
+w_, h_ = picture(s, FIG / "kernels_compare.png", 0.5, 1.3, 8.4, 5.0)
+caption(
+    s,
+    0.6,
+    1.4 + h_,
+    8.2,
+    "Rows: true kernels, our polyline estimate, a free-form estimate (25 x 25 numbers per photograph). Columns: different training photographs. Kernel error is the distance to the true kernel.",
+)
 block(
     s,
     9.2,
@@ -410,8 +423,8 @@ block(
     2.55,
     "Free-form kernel",
     [
-        "Collapses to a single pixel (a delta).",
-        f"Kernel error {fmt(fl)}; no better than vanilla.",
+        'Collapses to one bright pixel, which means "no blur": the scene absorbs the blur instead.',
+        f"Kernel error {fmt(fl)}, no better than standard 3DGS.",
     ],
     size=15,
     color=ACCENT,
@@ -424,8 +437,8 @@ block(
     2.55,
     "Polyline kernel",
     [
-        "Recovers the true motion path of each photograph.",
-        f"Kernel error {fmt(bl)}.",
+        "Recovers the shape and direction of each photograph's true motion path.",
+        f"Kernel error {fmt(bl)} (0 is perfect).",
     ],
     size=15,
     color=GREEN,
@@ -442,9 +455,9 @@ notes(
 # ---------------------------------------------------------------- 6 results
 s = new_slide("Result: close to the oracle, far above the baselines", 6)
 methods = [
-    ("Vanilla 3DGS", "vanilla"),
+    ("Standard 3DGS on blurry photos", "vanilla"),
     ("Wiener (guessed kernel) + 3DGS", "wiener_guess"),
-    ("Richardson-Lucy (guessed kernel) + 3DGS", "rl_guess"),
+    ("Rich.-Lucy (guessed kernel) + 3DGS", "rl_guess"),
     ("Ours: polyline kernel, blind", "ours_polyline"),
     ("Ours with the true kernels (oracle)", "ours_oracle_kernel"),
     ("3DGS on the sharp photographs (ceiling)", "sharp_input"),
@@ -487,7 +500,7 @@ text(
     bottom + 0.2,
     8.3,
     0.9,
-    "Held-out sharp views, 10,000 iterations. The last two rows use information a real system lacks.",
+    "Held-out sharp views, 10,000 iterations. Oracle: given the true blur kernels. Ceiling: trained on the unblurred photographs. Neither is available in practice.",
     size=13,
     color=GRAY,
 )
@@ -499,7 +512,7 @@ block(
     1.55,
     3.5,
     2.35,
-    "Over vanilla",
+    "Over standard 3DGS",
     [
         (f"+{gain:.1f} dB", {"size": 34, "bold": True, "color": GREEN}),
         ("on bonsai; +2.3 and +2.0 on counter and garden", {"size": 14}),
@@ -533,7 +546,7 @@ block(
     5.45,
     5.9,
     1.5,
-    "Vanilla and Wiener",
+    "Standard 3DGS and Wiener",
     "The knit texture and the small objects are smeared; Wiener with a wrong guess adds little.",
     size=15,
     color=ACCENT,
@@ -568,7 +581,7 @@ block(
     12.2,
     1.35,
     "Reading",
-    "Our blind Gaussian-kernel variant is 1 dB above vanilla and needs no guess. With the right guess Wiener is stronger on clean data, and it falls below vanilla at noise 0.1.",
+    "Our blind Gaussian-kernel variant is 1 dB above standard 3DGS and needs no guess. With the right guess Wiener is stronger on clean data, and it falls below standard 3DGS at noise 0.1.",
     size=15,
 )
 notes(
@@ -588,7 +601,7 @@ abl = [
     ("Kernel size 35", "abl_k35"),
     ("Shared kernel for all views", "abl_shared"),
     ("Free-form kernel", "ours_free"),
-    ("Vanilla 3DGS", "vanilla"),
+    ("Standard 3DGS", "vanilla"),
 ]
 abl = [(a, get("bonsai", "motion_medium", k)) for a, k in abl]
 cd = CategoryChartData()
@@ -645,7 +658,7 @@ block(
     4.9,
     2.2,
     "What we see",
-    "On static, well covered scenes ours recovers detail that vanilla loses: weave, leaves and wires.",
+    "On static, well covered scenes ours recovers detail that standard 3DGS loses: weave, leaves and wires.",
     size=15,
     color=GREEN,
 )
@@ -683,10 +696,10 @@ block(
     [
         "Blur is a convolution, so the scene and the kernels can be estimated jointly.",
         "A structured kernel prior is essential: free-form kernels collapse.",
-        "On motion blur it gains 2 to 3.5 dB over vanilla and nearly matches true kernels, with no kernel guess.",
+        "On motion blur it gains 2 to 3.5 dB over standard 3DGS and nearly matches true kernels, with no kernel guess.",
         "Classical deconvolution depends on the guess and on the noise level.",
     ],
-    size=15,
+    size=17,
     color=GREEN,
 )
 block(
@@ -702,7 +715,7 @@ block(
         "Few scenes and seeds; real results are qualitative.",
         "No comparison with the original Deblur-NeRF or BAD-Gaussians code.",
     ],
-    size=15,
+    size=17,
     color=ACCENT,
 )
 text(
